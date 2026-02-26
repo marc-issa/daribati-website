@@ -6,7 +6,7 @@ async function loadAppVersions() {
     const sessionToken = localStorage.getItem('admin_session_token');
     
     // Load version stats
-    const statsResponse = await fetch('/api/admin/app-versions/stats', {
+    const statsResponse = await fetch(`${apiBaseUrl}/api/admin/app-versions/stats`, {
       headers: {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
@@ -23,7 +23,7 @@ async function loadAppVersions() {
     const platforms = ['ios', 'android'];
     
     for (const platform of platforms) {
-      const response = await fetch(`/api/admin/app-versions/${platform}`, {
+      const response = await fetch(`${apiBaseUrl}/api/admin/app-versions/${platform}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-session-token': sessionToken,
@@ -127,7 +127,7 @@ async function updatePlatformVersion(platform) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/app-versions/${platform}`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/app-versions/${platform}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

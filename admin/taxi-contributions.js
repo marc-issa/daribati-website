@@ -14,7 +14,7 @@ async function loadTaxiContributions() {
     container.innerHTML = '<div class="loading">Loading taxi contributions...</div>';
     
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch('/api/admin/taxi-contributions', {
+    const response = await fetch(`${apiBaseUrl}/api/admin/taxi-contributions`, {
       headers: {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
@@ -154,7 +154,7 @@ function showAddTaxiContributionModal() {
 async function editTaxiContribution(id) {
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/taxi-contributions/${id}`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/taxi-contributions/${id}`, {
       headers: {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
@@ -192,7 +192,7 @@ async function deleteTaxiContribution(id) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/taxi-contributions/${id}`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/taxi-contributions/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -233,9 +233,9 @@ async function handleSaveTaxiContribution(e) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const url = isEdit 
-      ? `/api/admin/taxi-contributions/${id}`
-      : '/api/admin/taxi-contributions';
+    const url = isEdit
+      ? `${apiBaseUrl}/api/admin/taxi-contributions/${id}`
+      : `${apiBaseUrl}/api/admin/taxi-contributions`;
     const method = isEdit ? 'PUT' : 'POST';
 
     const response = await fetch(url, {

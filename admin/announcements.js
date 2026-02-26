@@ -9,7 +9,7 @@ async function loadAnnouncements() {
     container.innerHTML = '<div class="loading">Loading announcements...</div>';
     
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch('/api/admin/announcements', {
+    const response = await fetch(`${apiBaseUrl}/api/admin/announcements`, {
       headers: {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
@@ -119,7 +119,7 @@ function showAddAnnouncementModal() {
 async function editAnnouncement(id) {
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/announcements/${id}`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/announcements/${id}`, {
       headers: {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
@@ -182,7 +182,7 @@ async function saveAnnouncement(event) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const url = id ? `/api/admin/announcements/${id}` : '/api/admin/announcements';
+    const url = id ? `${apiBaseUrl}/api/admin/announcements/${id}` : `${apiBaseUrl}/api/admin/announcements`;
     const method = id ? 'PUT' : 'POST';
 
     const response = await fetch(url, {
@@ -220,7 +220,7 @@ async function toggleAnnouncementStatus(id, currentStatus) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/announcements/${id}/toggle`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/announcements/${id}/toggle`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ async function deleteAnnouncement(id) {
 
   try {
     const sessionToken = localStorage.getItem('admin_session_token');
-    const response = await fetch(`/api/admin/announcements/${id}`, {
+    const response = await fetch(`${apiBaseUrl}/api/admin/announcements/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
