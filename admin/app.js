@@ -1,6 +1,6 @@
 // Admin Portal JavaScript
 let sessionToken = '';
-let apiBaseUrl = window.location.origin; // Use same origin as portal
+let apiBaseUrl = 'https://api.daribati.com';
 let currentPage = 1;
 let currentFilters = {};
 let currentUser = null;
