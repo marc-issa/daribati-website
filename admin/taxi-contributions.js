@@ -19,7 +19,7 @@ async function loadTaxiContributions() {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -159,7 +159,7 @@ async function editTaxiContribution(id) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -198,7 +198,7 @@ async function deleteTaxiContribution(id) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -244,7 +244,7 @@ async function handleSaveTaxiContribution(e) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
       body: JSON.stringify(formData),
     });
 

@@ -11,7 +11,7 @@ async function loadAppVersions() {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (statsResponse.ok) {
@@ -28,7 +28,7 @@ async function loadAppVersions() {
           'Content-Type': 'application/json',
           'x-session-token': sessionToken,
         },
-        credentials: 'include',
+  
       });
 
       if (response.ok) {
@@ -133,7 +133,7 @@ async function updatePlatformVersion(platform) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
       body: JSON.stringify(data),
     });
 

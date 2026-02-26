@@ -14,7 +14,7 @@ async function loadAnnouncements() {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -124,7 +124,7 @@ async function editAnnouncement(id) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -191,7 +191,7 @@ async function saveAnnouncement(event) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
       body: JSON.stringify(data),
     });
 
@@ -226,7 +226,7 @@ async function toggleAnnouncementStatus(id, currentStatus) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
@@ -257,7 +257,7 @@ async function deleteAnnouncement(id) {
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
       },
-      credentials: 'include',
+
     });
 
     if (!response.ok) {
