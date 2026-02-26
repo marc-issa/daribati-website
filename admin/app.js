@@ -137,6 +137,42 @@ function setupEventListeners() {
     .getElementById('activeSessionsOnly')
     .addEventListener('change', loadAdminSessions);
 
+  // Announcements
+  document
+    .getElementById('addAnnouncementBtn')
+    .addEventListener('click', showAddAnnouncementModal);
+  document
+    .getElementById('announcementForm')
+    .addEventListener('submit', saveAnnouncement);
+  document
+    .getElementById('closeAnnouncementModal')
+    .addEventListener('click', closeAnnouncementModal);
+  document
+    .getElementById('cancelAnnouncementBtn')
+    .addEventListener('click', closeAnnouncementModal);
+
+  // App Versions
+  document
+    .getElementById('iosVersionForm')
+    .addEventListener('submit', updateIOSVersion);
+  document
+    .getElementById('androidVersionForm')
+    .addEventListener('submit', updateAndroidVersion);
+
+  // Taxi Contributions
+  document
+    .getElementById('addTaxiContributionBtn')
+    .addEventListener('click', showAddTaxiContributionModal);
+  document
+    .getElementById('taxiContributionForm')
+    .addEventListener('submit', handleSaveTaxiContribution);
+  document
+    .getElementById('closeTaxiContributionModal')
+    .addEventListener('click', closeTaxiContributionModal);
+  document
+    .getElementById('cancelTaxiContributionBtn')
+    .addEventListener('click', closeTaxiContributionModal);
+
   // Add keyboard shortcuts
   setupKeyboardShortcuts();
 
@@ -273,7 +309,10 @@ async function refreshCurrentTab() {
         await loadAnnouncements();
         break;
       case 'appVersions':
-        await loadAppVersions();
+        await loadAppVersionsTab();
+        break;
+      case 'taxiContributions':
+        await loadTaxiContributions();
         break;
       case 'adminUsers':
         await loadAdminUsers();
@@ -513,7 +552,7 @@ function switchTab(tabName) {
   } else if (tabName === 'announcements') {
     loadAnnouncements();
   } else if (tabName === 'appVersions') {
-    loadAppVersions();
+    loadAppVersionsTab();
   } else if (tabName === 'adminUsers') {
     loadAdminUsers();
   } else if (tabName === 'adminSessions') {
@@ -526,15 +565,6 @@ function switchTab(tabName) {
   }
 }
 
-function refreshCurrentTab() {
-  // Clear all caches to ensure fresh data
-  if (typeof cache !== 'undefined') {
-    cache.clearAll();
-  }
-  
-  const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-  switchTab(activeTab);
-}
 
 // Dashboard
 async function loadDashboard() {
@@ -1352,7 +1382,7 @@ function renderCalculatorUsageChart(calculatorStats, timeframe = calculatorTimef
 // Notifications Tab Management
 async function loadNotificationsTab() {
   try {
-    await loadAppVersions();
+    await loadNotificationVersionFilters();
     
     // Set up event listeners for filter changes (if not already set)
     const sendPlatformFilter = document.getElementById('sendPlatformFilter');
@@ -1374,14 +1404,14 @@ async function loadNotificationsTab() {
   }
 }
 
-async function loadAppVersions() {
+async function loadNotificationVersionFilters() {
   try {
     const stats = await makeCachedRequest('/api/admin/stats/users');
-    
+
     // Populate send version filter
     const sendVersionSelect = document.getElementById('sendVersionFilter');
     sendVersionSelect.innerHTML = '<option value="">All Versions</option>';
-    
+
     if (stats.users.by_version && stats.users.by_version.length > 0) {
       stats.users.by_version.forEach(v => {
         const option = document.createElement('option');
@@ -1394,7 +1424,7 @@ async function loadAppVersions() {
     // Populate history version filter
     const historyVersionSelect = document.getElementById('notificationVersionFilter');
     historyVersionSelect.innerHTML = '<option value="">All Versions</option>';
-    
+
     if (stats.users.by_version && stats.users.by_version.length > 0) {
       stats.users.by_version.forEach(v => {
         const option = document.createElement('option');
@@ -3405,6 +3435,542 @@ document.getElementById('applyAlertFiltersBtn')?.addEventListener('click', loadA
 document.getElementById('deleteResolvedAlertsBtn')?.addEventListener('click', deleteResolvedAlerts);
 document.getElementById('closeAlertModal')?.addEventListener('click', closeAlertModal);
 
+// ==========================================
+// Announcements Management
+// ==========================================
+
+async function loadAnnouncements() {
+  const container = document.getElementById('announcementsList');
+
+  try {
+    container.innerHTML = '<div class="loading">Loading announcements...</div>';
+    const announcements = await makeRequest('/api/admin/announcements');
+    displayAnnouncements(announcements);
+  } catch (error) {
+    console.error('Load announcements error:', error);
+    container.innerHTML = createEmptyState('Error loading announcements', error.message);
+    showResult('announcementsResult', error.message, 'error');
+  }
+}
+
+function displayAnnouncements(announcements) {
+  const container = document.getElementById('announcementsList');
+
+  if (announcements.length === 0) {
+    container.innerHTML = createEmptyState(
+      'No announcements found',
+      'Create your first announcement to communicate with app users'
+    );
+    return;
+  }
+
+  container.innerHTML = announcements.map(ann => {
+    const typeColors = {
+      maintenance: '#FF8F00',
+      announcement: '#005544',
+      warning: '#FFC107',
+      success: '#4CAF50',
+    };
+
+    const typeColor = typeColors[ann.type] || '#005544';
+    const isActive = ann.active;
+    const statusBadge = isActive
+      ? '<span class="badge badge-success">ACTIVE</span>'
+      : '<span class="badge badge-secondary">Inactive</span>';
+
+    const hasArabic = ann.title_ar || ann.message_ar;
+    const langBadge = hasArabic
+      ? '<span class="badge" style="background: #4CAF50; color: white;">EN+AR</span>'
+      : '<span class="badge" style="background: #999; color: white;">EN only</span>';
+
+    const fmtDate = (dateStr) => {
+      if (!dateStr) return 'Not set';
+      return new Date(dateStr).toLocaleString();
+    };
+
+    return `
+      <div class="list-item" style="border-left-color: ${typeColor};">
+        <div class="list-item-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span class="list-item-title">${escapeHtml(ann.title)}</span>
+              ${statusBadge}
+              ${langBadge}
+              <span class="badge badge-${ann.priority === 'high' ? 'danger' : ann.priority === 'low' ? 'info' : 'secondary'}">${ann.priority.toUpperCase()}</span>
+            </div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">
+              Type: <strong style="color: ${typeColor};">${capitalizeFirst(ann.type)}</strong>
+            </div>
+            <div style="font-size: 13px; color: #666;">
+              ${ann.message.substring(0, 100)}${ann.message.length > 100 ? '...' : ''}
+            </div>
+            ${ann.button_text ? `<div style="font-size: 12px; color: #888; margin-top: 5px;">Button: "${ann.button_text}"</div>` : ''}
+            <div style="font-size: 12px; color: #888; margin-top: 8px;">
+              <span>Start: ${fmtDate(ann.start_date)}</span> |
+              <span>End: ${fmtDate(ann.end_date)}</span>
+            </div>
+            <div style="font-size: 12px; color: #888;">
+              Dismissable: ${ann.dismissable ? 'Yes' : 'No'} |
+              Created: ${fmtDate(ann.created_at)}
+            </div>
+          </div>
+          <div class="list-item-actions">
+            <button onclick="toggleAnnouncementStatus(${ann.id}, ${isActive})" class="btn btn-sm ${isActive ? 'btn-secondary' : 'btn-success'}">
+              ${isActive ? 'Deactivate' : 'Activate'}
+            </button>
+            <button onclick="editAnnouncement(${ann.id})" class="btn btn-sm btn-primary">Edit</button>
+            <button onclick="deleteAnnouncement(${ann.id})" class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showAddAnnouncementModal() {
+  document.getElementById('announcementModalTitle').textContent = 'Create Announcement';
+  document.getElementById('announcementForm').reset();
+  document.getElementById('announcementId').value = '';
+  document.getElementById('announcementModal').style.display = 'block';
+}
+
+function closeAnnouncementModal() {
+  document.getElementById('announcementModal').style.display = 'none';
+}
+
+async function editAnnouncement(id) {
+  try {
+    const ann = await makeRequest(`/api/admin/announcements/${id}`);
+
+    document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+    document.getElementById('announcementId').value = ann.id;
+    document.getElementById('announcementType').value = ann.type;
+    document.getElementById('announcementTitle').value = ann.title;
+    document.getElementById('announcementTitleAr').value = ann.title_ar || '';
+    document.getElementById('announcementMessage').value = ann.message;
+    document.getElementById('announcementMessageAr').value = ann.message_ar || '';
+    document.getElementById('announcementButtonText').value = ann.button_text || '';
+    document.getElementById('announcementButtonTextAr').value = ann.button_text_ar || '';
+    document.getElementById('announcementPriority').value = ann.priority;
+    document.getElementById('announcementDismissable').checked = ann.dismissable;
+    document.getElementById('announcementActive').checked = ann.active;
+
+    if (ann.start_date) {
+      document.getElementById('announcementStartDate').value = formatDateTimeLocal(ann.start_date);
+    }
+    if (ann.end_date) {
+      document.getElementById('announcementEndDate').value = formatDateTimeLocal(ann.end_date);
+    }
+
+    document.getElementById('announcementModal').style.display = 'block';
+  } catch (error) {
+    console.error('Edit announcement error:', error);
+    showResult('announcementsResult', error.message, 'error');
+  }
+}
+
+async function saveAnnouncement(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('announcementId').value;
+  const data = {
+    type: document.getElementById('announcementType').value,
+    title: document.getElementById('announcementTitle').value,
+    title_ar: document.getElementById('announcementTitleAr').value || null,
+    message: document.getElementById('announcementMessage').value,
+    message_ar: document.getElementById('announcementMessageAr').value || null,
+    button_text: document.getElementById('announcementButtonText').value || null,
+    button_text_ar: document.getElementById('announcementButtonTextAr').value || null,
+    priority: document.getElementById('announcementPriority').value,
+    dismissable: document.getElementById('announcementDismissable').checked,
+    active: document.getElementById('announcementActive').checked,
+    start_date: document.getElementById('announcementStartDate').value || null,
+    end_date: document.getElementById('announcementEndDate').value || null,
+  };
+
+  try {
+    const endpoint = id ? `/api/admin/announcements/${id}` : '/api/admin/announcements';
+    const method = id ? 'PUT' : 'POST';
+
+    await makeRequest(endpoint, { method, body: JSON.stringify(data) });
+
+    closeAnnouncementModal();
+    showResult('announcementsResult', `Announcement ${id ? 'updated' : 'created'} successfully`, 'success');
+    loadAnnouncements();
+  } catch (error) {
+    console.error('Save announcement error:', error);
+    showResult('announcementsResult', error.message, 'error');
+  }
+}
+
+async function toggleAnnouncementStatus(id, currentStatus) {
+  if (currentStatus && !confirm('Deactivating will hide this announcement from all users. Continue?')) {
+    return;
+  }
+  if (!currentStatus && !confirm('Activating will show this announcement to all users and deactivate any currently active announcement. Continue?')) {
+    return;
+  }
+
+  try {
+    const result = await makeRequest(`/api/admin/announcements/${id}/toggle`, { method: 'PATCH' });
+    showResult('announcementsResult', result.message, 'success');
+    loadAnnouncements();
+  } catch (error) {
+    console.error('Toggle status error:', error);
+    showResult('announcementsResult', error.message, 'error');
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Are you sure you want to delete this announcement? This action cannot be undone.')) {
+    return;
+  }
+
+  try {
+    await makeRequest(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+    showResult('announcementsResult', 'Announcement deleted successfully', 'success');
+    loadAnnouncements();
+  } catch (error) {
+    console.error('Delete announcement error:', error);
+    showResult('announcementsResult', error.message, 'error');
+  }
+}
+
+function formatDateTimeLocal(dateStr) {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function capitalizeFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ==========================================
+// App Versions Management
+// ==========================================
+
+async function loadAppVersionsTab() {
+  try {
+    const stats = await makeRequest('/api/admin/app-versions/stats');
+    displayVersionStats(stats);
+
+    const platforms = ['ios', 'android'];
+    for (const platform of platforms) {
+      try {
+        const version = await makeRequest(`/api/admin/app-versions/${platform}`);
+        populateVersionForm(platform, version);
+      } catch (err) {
+        console.error(`Error loading ${platform} version:`, err);
+      }
+    }
+  } catch (error) {
+    console.error('Load app versions error:', error);
+    showResult('appVersionsResult', error.message, 'error');
+  }
+}
+
+function displayVersionStats(stats) {
+  const container = document.getElementById('versionStatsContainer');
+
+  if (!stats || stats.length === 0) {
+    container.innerHTML = '<p style="color: #666;">No statistics available</p>';
+    return;
+  }
+
+  container.innerHTML = stats.map(stat => {
+    const platformColor = stat.platform === 'ios' ? '#000000' : '#3DDC84';
+    const platformName = stat.platform === 'ios' ? 'iOS' : 'Android';
+    const updateRate = stat.total_users > 0
+      ? ((stat.users_on_latest / stat.total_users) * 100).toFixed(1)
+      : 0;
+    const needsUpdate = stat.users_below_minimum || 0;
+
+    return `
+      <div class="stat-card" style="background: linear-gradient(135deg, ${platformColor} 0%, ${stat.platform === 'ios' ? '#4A4A4A' : '#07C160'} 100%);">
+        <h4>${platformName} Users</h4>
+        <p class="stat-number">${stat.total_users || 0}</p>
+        <div style="font-size: 13px; margin-top: 10px; opacity: 0.9;">
+          ${stat.users_on_latest || 0} on latest (${updateRate}%)
+        </div>
+        ${needsUpdate > 0 ? `<div style="font-size: 12px; margin-top: 5px; opacity: 0.85; color: #FFD54F;">${needsUpdate} need update</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function populateVersionForm(platform, version) {
+  const prefix = platform === 'ios' ? 'ios' : 'android';
+
+  document.getElementById(`${prefix}LatestVersion`).value = version.latest_version || '';
+  document.getElementById(`${prefix}MinVersion`).value = version.min_supported_version || '';
+  document.getElementById(`${prefix}ReleaseNotes`).value = version.release_notes || '';
+  document.getElementById(`${prefix}ReleaseNotesAr`).value = version.release_notes_ar || '';
+  document.getElementById(`${prefix}StoreUrl`).value = version.store_url || '';
+}
+
+async function updateIOSVersion(event) {
+  event.preventDefault();
+  await updatePlatformVersion('ios');
+}
+
+async function updateAndroidVersion(event) {
+  event.preventDefault();
+  await updatePlatformVersion('android');
+}
+
+async function updatePlatformVersion(platform) {
+  const prefix = platform === 'ios' ? 'ios' : 'android';
+  const platformName = platform === 'ios' ? 'iOS' : 'Android';
+
+  const data = {
+    latest_version: document.getElementById(`${prefix}LatestVersion`).value,
+    min_supported_version: document.getElementById(`${prefix}MinVersion`).value,
+    release_notes: document.getElementById(`${prefix}ReleaseNotes`).value || null,
+    release_notes_ar: document.getElementById(`${prefix}ReleaseNotesAr`).value || null,
+    store_url: document.getElementById(`${prefix}StoreUrl`).value,
+  };
+
+  const versionRegex = /^\d+\.\d+\.\d+$/;
+  if (!versionRegex.test(data.latest_version)) {
+    showResult('appVersionsResult', 'Invalid latest version format. Use X.Y.Z (e.g., 2.0.0)', 'error');
+    return;
+  }
+  if (!versionRegex.test(data.min_supported_version)) {
+    showResult('appVersionsResult', 'Invalid minimum version format. Use X.Y.Z (e.g., 1.5.0)', 'error');
+    return;
+  }
+
+  if (compareVersions(data.min_supported_version, data.latest_version) > 0) {
+    showResult('appVersionsResult', 'Minimum version cannot be higher than latest version', 'error');
+    return;
+  }
+
+  try {
+    await makeRequest(`/api/admin/app-versions/${platform}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+
+    showResult('appVersionsResult', `${platformName} version updated successfully!`, 'success');
+    loadAppVersionsTab();
+  } catch (error) {
+    console.error('Update version error:', error);
+    showResult('appVersionsResult', error.message, 'error');
+  }
+}
+
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    if (parts1[i] > parts2[i]) return 1;
+    if (parts1[i] < parts2[i]) return -1;
+  }
+  return 0;
+}
+
+// ==========================================
+// Taxi Contributions Management
+// ==========================================
+
+function formatNumber(num) {
+  return new Intl.NumberFormat('en-US').format(num);
+}
+
+async function loadTaxiContributions() {
+  const container = document.getElementById('taxiContributionsList');
+
+  try {
+    container.innerHTML = '<div class="loading">Loading taxi contributions...</div>';
+    const result = await makeRequest('/api/admin/taxi-contributions');
+    displayTaxiContributions(result.data || []);
+  } catch (error) {
+    console.error('Load taxi contributions error:', error);
+    container.innerHTML = createEmptyState('Error loading taxi contributions', error.message);
+    showResult('taxiContributionsResult', error.message, 'error');
+  }
+}
+
+function displayTaxiContributions(contributions) {
+  const container = document.getElementById('taxiContributionsList');
+
+  if (contributions.length === 0) {
+    container.innerHTML = createEmptyState(
+      'No taxi contributions found',
+      'Add your first taxi contribution entry'
+    );
+    return;
+  }
+
+  const ownerContributions = contributions.filter(c => c.type === 'owner');
+  const nonOwnerContributions = contributions.filter(c => c.type === 'non_owner');
+
+  let html = `
+    <div class="stats-grid" style="margin-bottom: 25px;">
+      <div class="stat-card">
+        <div class="stat-label">Total Entries</div>
+        <div class="stat-value">${contributions.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Owner Entries</div>
+        <div class="stat-value">${ownerContributions.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Non-Owner Entries</div>
+        <div class="stat-value">${nonOwnerContributions.length}</div>
+      </div>
+    </div>
+  `;
+
+  if (ownerContributions.length > 0) {
+    html += `
+      <div style="margin-bottom: 30px;">
+        <h3 style="color: #005544; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #005544;">
+          Owner Contributions
+        </h3>
+        ${ownerContributions.map(contrib => createContributionItem(contrib)).join('')}
+      </div>
+    `;
+  }
+
+  if (nonOwnerContributions.length > 0) {
+    html += `
+      <div style="margin-bottom: 30px;">
+        <h3 style="color: #005544; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #005544;">
+          Non-Owner Contributions
+        </h3>
+        ${nonOwnerContributions.map(contrib => createContributionItem(contrib)).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function createContributionItem(contrib) {
+  const typeBadge = contrib.type === 'owner'
+    ? '<span class="badge badge-success">OWNER</span>'
+    : '<span class="badge badge-info">NON-OWNER</span>';
+
+  return `
+    <div class="list-item">
+      <div class="list-item-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="list-item-title">${escapeHtml(contrib.branch_name_en)}</span>
+            ${typeBadge}
+          </div>
+          <div style="font-size: 13px; color: #666; margin-bottom: 5px;">
+            Arabic: <strong>${escapeHtml(contrib.branch_name_ar)}</strong>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div style="font-size: 13px; color: #666;">
+              Monthly: <strong style="color: #005544;">${formatNumber(contrib.monthly_contribution)} LBP</strong>
+            </div>
+            <div style="font-size: 13px; color: #666;">
+              Daily: <strong style="color: #005544;">${formatNumber(contrib.daily_contribution)} LBP</strong>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: #888; margin-top: 8px;">
+            Display Order: ${contrib.display_order} |
+            Created: ${new Date(contrib.created_at).toLocaleString()}
+          </div>
+        </div>
+        <div class="list-item-actions">
+          <button onclick="editTaxiContribution(${contrib.id})" class="btn btn-sm btn-primary">Edit</button>
+          <button onclick="deleteTaxiContribution(${contrib.id})" class="btn btn-sm btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function showAddTaxiContributionModal() {
+  document.getElementById('taxiContributionModalTitle').textContent = 'Add Taxi Contribution';
+  document.getElementById('taxiContributionForm').reset();
+  document.getElementById('taxiContributionId').value = '';
+  document.getElementById('taxiContributionDisplayOrder').value = '0';
+  document.getElementById('taxiContributionModal').style.display = 'block';
+}
+
+function closeTaxiContributionModal() {
+  document.getElementById('taxiContributionModal').style.display = 'none';
+  document.getElementById('taxiContributionForm').reset();
+}
+
+async function editTaxiContribution(id) {
+  try {
+    const result = await makeRequest(`/api/admin/taxi-contributions/${id}`);
+    const contrib = result.data;
+
+    document.getElementById('taxiContributionModalTitle').textContent = 'Edit Taxi Contribution';
+    document.getElementById('taxiContributionId').value = contrib.id;
+    document.getElementById('taxiContributionType').value = contrib.type;
+    document.getElementById('taxiContributionBranchNameEn').value = contrib.branch_name_en;
+    document.getElementById('taxiContributionBranchNameAr').value = contrib.branch_name_ar;
+    document.getElementById('taxiContributionMonthly').value = contrib.monthly_contribution;
+    document.getElementById('taxiContributionDaily').value = contrib.daily_contribution;
+    document.getElementById('taxiContributionDisplayOrder').value = contrib.display_order || 0;
+    document.getElementById('taxiContributionModal').style.display = 'block';
+  } catch (error) {
+    console.error('Edit taxi contribution error:', error);
+    showResult('taxiContributionsResult', error.message, 'error');
+  }
+}
+
+async function deleteTaxiContribution(id) {
+  if (!confirm('Are you sure you want to delete this taxi contribution?')) {
+    return;
+  }
+
+  try {
+    await makeRequest(`/api/admin/taxi-contributions/${id}`, { method: 'DELETE' });
+    showResult('taxiContributionsResult', 'Taxi contribution deleted successfully', 'success');
+    loadTaxiContributions();
+  } catch (error) {
+    console.error('Delete taxi contribution error:', error);
+    showResult('taxiContributionsResult', error.message, 'error');
+  }
+}
+
+async function handleSaveTaxiContribution(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('taxiContributionId').value;
+  const isEdit = !!id;
+
+  const formData = {
+    type: document.getElementById('taxiContributionType').value,
+    branch_name_en: document.getElementById('taxiContributionBranchNameEn').value,
+    branch_name_ar: document.getElementById('taxiContributionBranchNameAr').value,
+    monthly_contribution: document.getElementById('taxiContributionMonthly').value,
+    daily_contribution: document.getElementById('taxiContributionDaily').value,
+    display_order: document.getElementById('taxiContributionDisplayOrder').value || 0,
+  };
+
+  try {
+    const endpoint = isEdit
+      ? `/api/admin/taxi-contributions/${id}`
+      : '/api/admin/taxi-contributions';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    await makeRequest(endpoint, { method, body: JSON.stringify(formData) });
+
+    showResult('taxiContributionsResult', `Taxi contribution ${isEdit ? 'updated' : 'created'} successfully`, 'success');
+    closeTaxiContributionModal();
+    loadTaxiContributions();
+  } catch (error) {
+    console.error('Save taxi contribution error:', error);
+    showResult('taxiContributionsResult', error.message, 'error');
+  }
+}
+
 // Close modal when clicking outside
 window.onclick = function (event) {
   const serviceModal = document.getElementById('serviceModal');
@@ -3412,6 +3978,8 @@ window.onclick = function (event) {
   const adminUserModal = document.getElementById('adminUserModal');
   const feedbackModal = document.getElementById('feedbackModal');
   const alertModal = document.getElementById('alertModal');
+  const announcementModal = document.getElementById('announcementModal');
+  const taxiContributionModal = document.getElementById('taxiContributionModal');
 
   if (event.target === serviceModal) {
     closeServiceModal();
@@ -3427,5 +3995,11 @@ window.onclick = function (event) {
   }
   if (event.target === alertModal) {
     closeAlertModal();
+  }
+  if (event.target === announcementModal) {
+    closeAnnouncementModal();
+  }
+  if (event.target === taxiContributionModal) {
+    closeTaxiContributionModal();
   }
 };
