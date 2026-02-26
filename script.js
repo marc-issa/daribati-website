@@ -226,6 +226,13 @@ function setupLanguageToggle() {
   });
 }
 
+function trackEvent(eventName, params) {
+  if (typeof gtag !== 'function') return;
+  params = params || {};
+  params.transport_type = 'beacon';
+  gtag('event', eventName, params);
+}
+
 function setupAnalyticsEvents() {
   if (typeof gtag !== 'function') return;
 
@@ -239,7 +246,7 @@ function setupAnalyticsEvents() {
         : null;
     if (eventName) {
       link.addEventListener('click', function () {
-        gtag('event', eventName, { link_url: href });
+        trackEvent(eventName, { link_url: href });
       });
     }
   });
@@ -249,11 +256,11 @@ function setupAnalyticsEvents() {
     var href = link.href || '';
     if (href.startsWith('tel:')) {
       link.addEventListener('click', function () {
-        gtag('event', 'click_phone', { link_url: href });
+        trackEvent('click_phone', { link_url: href });
       });
     } else if (href.includes('wa.me')) {
       link.addEventListener('click', function () {
-        gtag('event', 'click_whatsapp', { link_url: href });
+        trackEvent('click_whatsapp', { link_url: href });
       });
     }
   });
@@ -262,7 +269,7 @@ function setupAnalyticsEvents() {
   document.querySelectorAll('.nav-link').forEach(function (link) {
     link.addEventListener('click', function () {
       var section = link.getAttribute('href') || '';
-      gtag('event', 'click_nav', { section: section.replace('#', '') });
+      trackEvent('click_nav', { section: section.replace('#', '') });
     });
   });
 }
