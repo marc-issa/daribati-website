@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+    <title>Daribati Admin Portal</title>
+    <link
+      rel="stylesheet"
+      href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header removed - now using sticky navbar buttons -->
+
+      <!-- Authentication Section -->
+      <div
+        id="authSection"
+        class="auth-section">
+        <div class="auth-card">
+          <div class="auth-header">
+            <div class="auth-logo">
+              <img src="logo.png" alt="Daribati Logo" width="80" height="80" />
+            </div>
+            <h2>Daribati Admin Portal</h2>
+            <p class="auth-subtitle">Sign in to manage your portal</p>
+          </div>
+          
+          <form
+            id="loginForm"
+            onsubmit="event.preventDefault(); handleLogin();">
+            <div class="form-group">
+              <label for="usernameInput">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Username
+              </label>
+              <input
+                type="text"
+                id="usernameInput"
+                placeholder="Enter your username"
+                autocomplete="username"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="passwordInput">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Password
+              </label>
+              <input
+                type="password"
+                id="passwordInput"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required />
+            </div>
+            
+            <div
+              id="authError"
+              class="error-message"
+              style="margin-bottom: 15px;"></div>
+            
+            <button
+              type="submit"
+              id="loginBtn"
+              class="btn btn-primary btn-login">
+              <span class="btn-text">Sign In</span>
+            </button>
+          </form>
+          
+          <div class="auth-footer">
+            <p>© 2024-2026 Daribati. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div
+        id="mainContent"
+        class="main-content"
+        style="display: none">
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+          <div class="tabs-brand" onclick="switchTab('dashboard')" title="Go to Dashboard">
+            <img src="logo.png" alt="Daribati Logo" class="brand-logo" width="40" height="40" />
+            <span class="portal-title">Daribati Portal</span>
+          </div>
+          
+          <div class="tabs-container">
+            <!-- Main Tabs Row (All Admins) -->
+            <div class="tabs-row tabs-main-row">
+              <button
+                class="tab-btn active"
+                data-tab="dashboard">
+                Dashboard
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="notifications">
+                Notifications
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="announcements">
+                Announcements
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="services">
+                Services
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="disclaimers">
+                Disclaimers
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="feedback">
+                Feedback
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="taxiContributions">
+                Taxi Contributions
+              </button>
+            </div>
+            
+            <!-- Super Admin Tabs Row (Super Admins Only) -->
+            <div class="tabs-row tabs-admin-row" id="superAdminTabsRow" style="display: none;">
+              <button
+                class="tab-btn"
+                id="systemAlertsTabBtn"
+                data-tab="systemAlerts">
+                System Alerts
+              </button>
+              <button
+                class="tab-btn"
+                id="appVersionsTabBtn"
+                data-tab="appVersions">
+                App Versions
+              </button>
+              <button
+                class="tab-btn"
+                id="adminSessionsTabBtn"
+                data-tab="adminSessions">
+                Sessions & Logins
+              </button>
+              <button
+                class="tab-btn"
+                id="adminUsersTabBtn"
+                data-tab="adminUsers">
+                Admin Users
+              </button>
+            </div>
+          </div>
+          
+          <div class="tabs-right">
+            <button
+              id="refreshBtnNav"
+              class="btn btn-icon btn-refresh"
+              title="Refresh">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+            <button
+              id="logoutBtnNav"
+              class="btn btn-icon btn-logout"
+              title="Logout">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
+          </div>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div
+          id="dashboardTab"
+          class="tab-content active">
+          <h2>Dashboard</h2>
+
+          <!-- User Metrics -->
+          <div class="kpi-section">
+            <h3 class="kpi-section-title">User Metrics</h3>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="statTotalUsers">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Active Users (30 days)</div>
+                <div class="stat-value" id="statActiveUsers">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">New Users Today</div>
+                <div class="stat-value" id="statNewToday">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">New Users This Week</div>
+                <div class="stat-value" id="statNewWeek">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Users with Push Tokens</div>
+                <div class="stat-value" id="statPushTokens">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Engagement Metrics -->
+          <div class="kpi-section">
+            <h3 class="kpi-section-title">Engagement Metrics</h3>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Notifications</div>
+                <div class="stat-value" id="statTotalNotifications">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Notification Read Rate</div>
+                <div class="stat-value" id="statReadRate">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Recent Feedback (7d)</div>
+                <div class="stat-value" id="statRecentFeedback">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calculator Usage -->
+          <div class="kpi-section">
+            <h3 class="kpi-section-title">Calculator Usage (Last 30 Days)</h3>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Tax on Salaries</div>
+                <div class="stat-value" id="statSalaryTax">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Deemed Profit</div>
+                <div class="stat-value" id="statDeemedProfit">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Property Tax</div>
+                <div class="stat-value" id="statPropertyTax">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Real Estate Fees</div>
+                <div class="stat-value" id="statRealEstateFees">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Taxi Contributions</div>
+                <div class="stat-value" id="statTaxiContributions">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">NSSF</div>
+                <div class="stat-value" id="statNSSF">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Health (Super Admin Only) -->
+          <div class="kpi-section" id="systemHealthSection" style="display: none;">
+            <h3 class="kpi-section-title">System Health</h3>
+            <div class="stats-grid">
+              <div class="stat-card stat-card-alert">
+                <div class="stat-label">Unresolved Alerts</div>
+                <div class="stat-value" id="statUnresolvedAlerts">-</div>
+              </div>
+              <div class="stat-card stat-card-critical">
+                <div class="stat-label">Critical Alerts (24h)</div>
+                <div class="stat-value" id="statCriticalAlerts">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Active Admin Sessions</div>
+                <div class="stat-value" id="statActiveSessions">-</div>
+              </div>
+              <div class="stat-card" id="apiHealthCard">
+                <div class="stat-label">API Health</div>
+                <div class="stat-value" id="statApiHealth">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Avg Response Time</div>
+                <div class="stat-value" id="statResponseTime">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">API Errors (5min)</div>
+                <div class="stat-value" id="statApiErrors">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1. Daily Active Users -->
+          <div class="chart-section">
+            <h3>Daily Active Users (Last 30 Days)</h3>
+            <div
+              id="dailyActiveUsersChart"
+              class="chart-container"
+              style="min-height: 300px;"></div>
+          </div>
+
+          <!-- 2. Calculator Usage Breakdown -->
+          <div class="chart-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="margin: 0;">Calculator Usage Breakdown</h3>
+              <div id="calculatorUsageFilters" style="display: flex; gap: 10px;">
+                <button class="calculator-filter-btn active" data-timeframe="30" onclick="setCalculatorTimeframe(30)">
+                  30 Days
+                </button>
+                <button class="calculator-filter-btn" data-timeframe="60" onclick="setCalculatorTimeframe(60)">
+                  60 Days
+                </button>
+                <button class="calculator-filter-btn" data-timeframe="90" onclick="setCalculatorTimeframe(90)">
+                  90 Days
+                </button>
+                <button class="calculator-filter-btn" data-timeframe="lifetime" onclick="setCalculatorTimeframe('lifetime')">
+                  Lifetime
+                </button>
+              </div>
+            </div>
+            <div
+              id="calculatorUsageChart"
+              class="chart-container"></div>
+          </div>
+
+          <!-- 3. Platform and Version (Side by Side) -->
+          <div class="chart-row-half" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; margin-bottom: 20px;">
+            <div class="chart-section" style="margin-top: 0;">
+              <h3>Users by Platform</h3>
+              <div
+                id="platformChart"
+                class="chart-container"></div>
+            </div>
+            <div class="chart-section" style="margin-top: 0;">
+              <h3>Top App Versions</h3>
+              <div
+                id="versionChart"
+                class="chart-container"></div>
+            </div>
+          </div>
+
+          <!-- 4. Notification Engagement -->
+          <div class="chart-section">
+            <h3>Notification Engagement</h3>
+            <div
+              id="notificationEngagementChart"
+              class="chart-container"></div>
+          </div>
+
+          <!-- 5. Feedback by Category -->
+          <div class="chart-section">
+            <h3>Feedback by Category (Last 30 Days)</h3>
+            <div
+              id="feedbackChart"
+              class="chart-container"></div>
+          </div>
+        </div>
+
+        <!-- Notifications Tab (Merged) -->
+        <div
+          id="notificationsTab"
+          class="tab-content">
+          <h2>Notifications Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Send notifications to users and manage notification history.
+          </p>
+
+          <!-- Send Notification Form -->
+          <div class="form-section">
+            <h3>Send Notification</h3>
+            <form id="broadcastNotificationForm">
+              <div class="form-group">
+                <label for="broadcastTitle">Title</label>
+                <input
+                  type="text"
+                  id="broadcastTitle"
+                  placeholder="Notification title"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="broadcastBody">Body</label>
+                <textarea
+                  id="broadcastBody"
+                  rows="4"
+                  placeholder="Notification body text"
+                  required></textarea>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                  <label for="broadcastType">Type</label>
+                  <select id="broadcastType">
+                    <option value="general">General</option>
+                    <option value="tax_reminder">Tax Reminder</option>
+                    <option value="service_announcement">Service Announcement</option>
+                    <option value="document_status">Document Status</option>
+                    <option value="payment_reminder">Payment Reminder</option>
+                    <option value="system_announcement">System Announcement</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sendPlatformFilter">Platform</label>
+                  <select id="sendPlatformFilter">
+                    <option value="">All Platforms</option>
+                    <option value="ios">iOS Only</option>
+                    <option value="android">Android Only</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sendVersionFilter">App Version</label>
+                  <select id="sendVersionFilter">
+                    <option value="">All Versions</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                <button
+                  type="submit"
+                  class="btn btn-warning">
+                  Send Notification
+                </button>
+                <span id="targetUsersCount" style="color: #666; font-size: 14px;"></span>
+              </div>
+            </form>
+          </div>
+
+          <div
+            id="notificationResult"
+            class="result-message"></div>
+
+          <!-- Notifications History -->
+          <div style="margin-top: 40px;">
+            <h3>Notification History</h3>
+            
+            <div class="filters">
+              <div class="form-group">
+                <label for="notificationTypeFilter">Type</label>
+                <select id="notificationTypeFilter">
+                  <option value="">All Types</option>
+                  <option value="general">General</option>
+                  <option value="tax_reminder">Tax Reminder</option>
+                  <option value="service_announcement">Service Announcement</option>
+                  <option value="document_status">Document Status</option>
+                  <option value="payment_reminder">Payment Reminder</option>
+                  <option value="system_announcement">System Announcement</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="notificationPlatformFilter">Platform</label>
+                <select id="notificationPlatformFilter">
+                  <option value="">All Platforms</option>
+                  <option value="ios">iOS</option>
+                  <option value="android">Android</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="notificationVersionFilter">App Version</label>
+                <select id="notificationVersionFilter">
+                  <option value="">All Versions</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    id="unreadNotificationsOnly" />
+                  Unread Only
+                </label>
+              </div>
+              <button
+                id="applyNotificationFiltersBtn"
+                class="btn btn-secondary">
+                Apply Filters
+              </button>
+            </div>
+
+            <div
+              id="notificationsList"
+              class="list-container">
+              <!-- Notifications will be loaded here -->
+            </div>
+
+            <div
+              id="notificationsListResult"
+              class="result-message"
+              style="display: none"></div>
+          </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div
+          id="servicesTab"
+          class="tab-content">
+          <h2>Manage Services</h2>
+
+          <div class="action-bar">
+            <button
+              id="addServiceBtn"
+              class="btn btn-primary">
+              Add New Service
+            </button>
+          </div>
+
+          <div
+            id="servicesList"
+            class="list-container">
+            <!-- Services will be loaded here -->
+          </div>
+
+          <div
+            id="servicesResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Add/Edit Service Modal -->
+          <div
+            id="serviceModal"
+            class="modal">
+            <div class="modal-content">
+              <span
+                class="close"
+                id="closeServiceModal"
+                >&times;</span
+              >
+              <h3 id="serviceModalTitle">Add Service</h3>
+              <form id="serviceForm">
+                <input
+                  type="hidden"
+                  id="serviceId" />
+
+                <div
+                  style="
+                    background: #f0f8ff;
+                    padding: 15px;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    border-left: 4px solid #005544;
+                  ">
+                  <h4 style="margin-bottom: 10px; color: #005544">
+                    English Fields
+                  </h4>
+                  <div class="form-group">
+                    <label for="serviceTitle">Service Title (English) *</label>
+                    <input
+                      type="text"
+                      id="serviceTitle"
+                      placeholder="Enter service title in English"
+                      required />
+                  </div>
+                  <div class="form-group">
+                    <label for="featuredDescription"
+                      >Featured Description (English)</label
+                    >
+                    <textarea
+                      id="featuredDescription"
+                      rows="3"
+                      placeholder="Featured description (shown when service is featured)"></textarea>
+                    <small
+                      >Only required if service is marked as featured</small
+                    >
+                  </div>
+                </div>
+
+                <div
+                  style="
+                    background: #fff8f0;
+                    padding: 15px;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    border-left: 4px solid #ffc107;
+                  ">
+                  <h4 style="margin-bottom: 10px; color: #d68910">
+                    Arabic Fields
+                  </h4>
+                  <div class="form-group">
+                    <label for="serviceTitleAr">Service Title (Arabic)</label>
+                    <input
+                      type="text"
+                      id="serviceTitleAr"
+                      placeholder="أدخل عنوان الخدمة بالعربية"
+                      dir="rtl" />
+                  </div>
+                  <div class="form-group">
+                    <label for="featuredDescriptionAr"
+                      >Featured Description (Arabic)</label
+                    >
+                    <textarea
+                      id="featuredDescriptionAr"
+                      rows="3"
+                      placeholder="الوصف المميز (يظهر عندما تكون الخدمة مميزة)"
+                      dir="rtl"></textarea>
+                    <small
+                      >Only required if service is marked as featured</small
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="serviceMessage">WhatsApp Message *</label>
+                  <textarea
+                    id="serviceMessage"
+                    rows="4"
+                    placeholder="Pre-filled WhatsApp message"></textarea>
+                  <small
+                    >This message will be pre-filled when user opens
+                    WhatsApp</small
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="servicePhone">Phone Number *</label>
+                  <input
+                    type="text"
+                    id="servicePhone"
+                    placeholder="e.g., +96171123456" />
+                  <small>Include country code (e.g., +961 for Lebanon)</small>
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="serviceFeatured" />
+                    Featured Service
+                  </label>
+                  <small style="display: block; margin-top: 5px"
+                    >Featured services appear at the top with a highlighted
+                    card</small
+                  >
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="serviceActive"
+                      checked />
+                    Active
+                  </label>
+                  <small style="display: block; margin-top: 5px"
+                    >Only active services are shown in the app</small
+                  >
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelServiceBtn">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimers Tab -->
+        <div
+          id="disclaimersTab"
+          class="tab-content">
+          <h2>Manage Disclaimers</h2>
+
+          <div class="action-bar">
+            <button
+              id="addDisclaimerBtn"
+              class="btn btn-primary">
+              Add New Disclaimer
+            </button>
+          </div>
+
+          <div
+            id="disclaimersList"
+            class="list-container">
+            <!-- Disclaimers will be loaded here -->
+          </div>
+
+          <div
+            id="disclaimersResult"
+            class="result-message"
+            style="display: none"></div>
+
+           <!-- Add/Edit Disclaimer Modal -->
+           <div
+             id="disclaimerModal"
+             class="modal">
+             <div class="modal-content">
+               <span class="close">&times;</span>
+               <h3 id="modalTitle">Add Disclaimer</h3>
+               <form id="disclaimerForm">
+                 <input
+                   type="hidden"
+                   id="disclaimerId" />
+                 <div class="form-group">
+                   <label for="screenName">Screen Name</label>
+                   <input
+                     type="text"
+                     id="screenName"
+                     placeholder="e.g., taxOnSalaries, propertyTax"
+                     required />
+                   <small>Must match the screen name used in the app</small>
+                 </div>
+
+                 <div
+                   style="
+                     background: #f0f8ff;
+                     padding: 15px;
+                     border-radius: 4px;
+                     margin-bottom: 20px;
+                     border-left: 4px solid #005544;
+                   ">
+                   <h4 style="margin-bottom: 10px; color: #005544">
+                     English Text
+                   </h4>
+                   <div class="form-group">
+                     <label for="disclaimerText">Disclaimer Text (English) *</label>
+                     <textarea
+                       id="disclaimerText"
+                       rows="6"
+                       placeholder="Enter disclaimer text in English"
+                       required></textarea>
+                   </div>
+                 </div>
+
+                 <div
+                   style="
+                     background: #fff8f0;
+                     padding: 15px;
+                     border-radius: 4px;
+                     margin-bottom: 20px;
+                     border-left: 4px solid #ffc107;
+                   ">
+                   <h4 style="margin-bottom: 10px; color: #d68910">
+                     Arabic Text
+                   </h4>
+                   <div class="form-group">
+                     <label for="disclaimerTextAr">Disclaimer Text (Arabic)</label>
+                     <textarea
+                       id="disclaimerTextAr"
+                       rows="6"
+                       placeholder="أدخل نص إخلاء المسؤولية بالعربية"
+                       dir="rtl"></textarea>
+                     <small>Optional - will fall back to English if not provided</small>
+                   </div>
+                 </div>
+
+                 <button
+                   type="submit"
+                   class="btn btn-primary">
+                   Save
+                 </button>
+                 <button
+                   type="button"
+                   class="btn btn-secondary"
+                   id="cancelDisclaimerBtn">
+                   Cancel
+                 </button>
+               </form>
+             </div>
+           </div>
+        </div>
+
+        <!-- Feedback Tab -->
+        <div
+          id="feedbackTab"
+          class="tab-content">
+          <h2>Feedback Management</h2>
+
+          <div class="action-bar">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <select id="feedbackStatusFilter" class="filter-select">
+                <option value="">All Statuses</option>
+                <option value="new">New</option>
+                <option value="in_review">In Review</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+              <select id="feedbackCategoryFilter" class="filter-select">
+                <option value="">All Categories</option>
+                <option value="bug">Bug Report</option>
+                <option value="feature_request">Feature Request</option>
+                <option value="improvement">Improvement</option>
+                <option value="general">General</option>
+                <option value="other">Other</option>
+              </select>
+              <button
+                id="applyFeedbackFiltersBtn"
+                class="btn btn-secondary">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+
+          <!-- Feedback Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div class="stat-card">
+              <h4>Total Feedback</h4>
+              <p id="totalFeedbackCount" class="stat-number">-</p>
+            </div>
+            <div class="stat-card">
+              <h4>New (Last 7 Days)</h4>
+              <p id="recentFeedbackCount" class="stat-number">-</p>
+            </div>
+            <div class="stat-card">
+              <h4>Pending Review</h4>
+              <p id="pendingFeedbackCount" class="stat-number">-</p>
+            </div>
+          </div>
+
+          <div
+            id="feedbackList"
+            class="list-container">
+            <!-- Feedback will be loaded here -->
+          </div>
+
+          <div
+            id="feedbackResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Feedback Detail Modal -->
+          <div
+            id="feedbackModal"
+            class="modal">
+            <div class="modal-content" style="max-width: 700px;">
+              <span class="close">&times;</span>
+              <h3>Feedback Details</h3>
+              <div id="feedbackDetailsContent">
+                <!-- Details will be loaded here -->
+              </div>
+              <div style="margin-top: 20px;">
+                <h4>Update Status</h4>
+                <form id="updateFeedbackForm">
+                  <input type="hidden" id="feedbackIdToUpdate" />
+                  <div class="form-group">
+                    <label for="feedbackStatus">Status</label>
+                    <select id="feedbackStatus" required>
+                      <option value="new">New</option>
+                      <option value="in_review">In Review</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="adminNotes">Admin Notes</label>
+                    <textarea
+                      id="adminNotes"
+                      rows="4"
+                      placeholder="Add notes for internal reference..."></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Update</button>
+                  <button type="button" class="btn btn-danger" id="deleteFeedbackBtn">Delete</button>
+                  <button type="button" class="btn btn-secondary" id="closeFeedbackModalBtn">Close</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Announcements Tab -->
+        <div
+          id="announcementsTab"
+          class="tab-content">
+          <h2>Announcements Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage app-wide announcements and maintenance notices.
+          </p>
+
+          <div class="action-bar">
+            <button
+              id="addAnnouncementBtn"
+              class="btn btn-primary">
+              Create Announcement
+            </button>
+          </div>
+
+          <div
+            id="announcementsList"
+            class="list-container">
+            <!-- Announcements will be loaded here -->
+          </div>
+
+          <div
+            id="announcementsResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Add/Edit Announcement Modal -->
+          <div
+            id="announcementModal"
+            class="modal">
+            <div class="modal-content" style="max-width: 700px;">
+              <span
+                class="close"
+                id="closeAnnouncementModal"
+                >&times;</span>
+              <h3 id="announcementModalTitle">Create Announcement</h3>
+              <form id="announcementForm">
+                <input
+                  type="hidden"
+                  id="announcementId" />
+                
+                <div class="form-group">
+                  <label for="announcementType">Type *</label>
+                  <select id="announcementType" required>
+                    <option value="announcement">Announcement (General Info)</option>
+                    <option value="maintenance">Maintenance (System Downtime)</option>
+                    <option value="warning">Warning (Important Notice)</option>
+                    <option value="success">Success (Positive News)</option>
+                  </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div class="form-group">
+                    <label for="announcementTitle">Title (English) *</label>
+                    <input
+                      type="text"
+                      id="announcementTitle"
+                      placeholder="Enter English title"
+                      required />
+                  </div>
+                  <div class="form-group">
+                    <label for="announcementTitleAr">Title (Arabic)</label>
+                    <input
+                      type="text"
+                      id="announcementTitleAr"
+                      placeholder="أدخل العنوان بالعربية"
+                      dir="rtl"
+                      style="text-align: right;" />
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div class="form-group">
+                    <label for="announcementMessage">Message (English) *</label>
+                    <textarea
+                      id="announcementMessage"
+                      rows="5"
+                      placeholder="Enter English message"
+                      required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="announcementMessageAr">Message (Arabic)</label>
+                    <textarea
+                      id="announcementMessageAr"
+                      rows="5"
+                      placeholder="أدخل الرسالة بالعربية"
+                      dir="rtl"
+                      style="text-align: right;"></textarea>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div class="form-group">
+                    <label for="announcementButtonText">Button Text (English)</label>
+                    <input
+                      type="text"
+                      id="announcementButtonText"
+                      placeholder="e.g., Got It, Update Now (optional)" />
+                  </div>
+                  <div class="form-group">
+                    <label for="announcementButtonTextAr">Button Text (Arabic)</label>
+                    <input
+                      type="text"
+                      id="announcementButtonTextAr"
+                      placeholder="مثلاً: فهمت، حدث الآن"
+                      dir="rtl"
+                      style="text-align: right;" />
+                  </div>
+                </div>
+                <small style="display: block; margin-top: -10px; margin-bottom: 15px; color: #666;">Leave button text empty for no button</small>
+
+                <div class="form-group">
+                  <label for="announcementPriority">Priority *</label>
+                  <select id="announcementPriority" required>
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label for="announcementStartDate">Start Date (optional)</label>
+                    <input
+                      type="datetime-local"
+                      id="announcementStartDate" />
+                  </div>
+                  <div class="form-group">
+                    <label for="announcementEndDate">End Date (optional)</label>
+                    <input
+                      type="datetime-local"
+                      id="announcementEndDate" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="announcementDismissable"
+                      checked />
+                    Users can dismiss
+                  </label>
+                  <small style="display: block; margin-top: 5px">
+                    Uncheck for critical maintenance notices
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="announcementActive" />
+                    Activate immediately
+                  </label>
+                  <small style="display: block; margin-top: 5px; color: #dc3545;">
+                    ⚠️ Activating will deactivate all other announcements
+                  </small>
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn btn-primary">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelAnnouncementBtn">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- App Versions Tab -->
+        <div
+          id="appVersionsTab"
+          class="tab-content">
+          <h2>App Version Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage app versions and force update settings for iOS and Android.
+          </p>
+
+          <!-- Version Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px;" id="versionStatsContainer">
+            <!-- Stats will be loaded here -->
+          </div>
+
+          <!-- Platform Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            
+            <!-- iOS Card -->
+            <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #000000 0%, #4A4A4A 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style="margin: 0; color: #005544; font-size: 20px;">iOS Version</h3>
+                  <p style="margin: 5px 0 0; color: #666; font-size: 13px;">iPhone & iPad</p>
+                </div>
+              </div>
+              <form id="iosVersionForm">
+                <div class="form-group">
+                  <label for="iosLatestVersion">Latest Version *</label>
+                  <input type="text" id="iosLatestVersion" placeholder="e.g., 2.0.0" pattern="\d+\.\d+\.\d+" required />
+                  <small>Semantic versioning: MAJOR.MINOR.PATCH</small>
+                </div>
+                <div class="form-group">
+                  <label for="iosMinVersion">Minimum Supported Version *</label>
+                  <input type="text" id="iosMinVersion" placeholder="e.g., 1.5.0" pattern="\d+\.\d+\.\d+" required />
+                  <small>Users below this version will be forced to update</small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label for="iosReleaseNotes">Release Notes (English)</label>
+                    <textarea id="iosReleaseNotes" rows="3" placeholder="What's new in this version..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="iosReleaseNotesAr">Release Notes (Arabic)</label>
+                    <textarea id="iosReleaseNotesAr" rows="3" placeholder="ما الجديد في هذا الإصدار..." dir="rtl" style="text-align: right;"></textarea>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="iosStoreUrl">App Store URL *</label>
+                  <input type="url" id="iosStoreUrl" placeholder="https://apps.apple.com/app/id..." required />
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Update iOS Version</button>
+              </form>
+            </div>
+
+            <!-- Android Card -->
+            <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3DDC84 0%, #07C160 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                    <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24a11.46 11.46 0 0 0-8.94 0L5.65 5.67c-.19-.28-.54-.37-.83-.22-.3.16-.42.54-.26.85l1.84 3.18C2.92 12.03 1.7 16.52 2 21h20c.3-4.48-.92-8.97-4.4-11.52zM7 17.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style="margin: 0; color: #005544; font-size: 20px;">Android Version</h3>
+                  <p style="margin: 5px 0 0; color: #666; font-size: 13px;">Google Play</p>
+                </div>
+              </div>
+              <form id="androidVersionForm">
+                <div class="form-group">
+                  <label for="androidLatestVersion">Latest Version *</label>
+                  <input type="text" id="androidLatestVersion" placeholder="e.g., 2.0.0" pattern="\d+\.\d+\.\d+" required />
+                  <small>Semantic versioning: MAJOR.MINOR.PATCH</small>
+                </div>
+                <div class="form-group">
+                  <label for="androidMinVersion">Minimum Supported Version *</label>
+                  <input type="text" id="androidMinVersion" placeholder="e.g., 1.5.0" pattern="\d+\.\d+\.\d+" required />
+                  <small>Users below this version will be forced to update</small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label for="androidReleaseNotes">Release Notes (English)</label>
+                    <textarea id="androidReleaseNotes" rows="3" placeholder="What's new in this version..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="androidReleaseNotesAr">Release Notes (Arabic)</label>
+                    <textarea id="androidReleaseNotesAr" rows="3" placeholder="ما الجديد في هذا الإصدار..." dir="rtl" style="text-align: right;"></textarea>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="androidStoreUrl">Google Play URL *</label>
+                  <input type="url" id="androidStoreUrl" placeholder="https://play.google.com/store/apps/details?id=..." required />
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Update Android Version</button>
+              </form>
+            </div>
+
+          </div>
+
+          <div
+            id="appVersionsResult"
+            class="result-message"
+            style="display: none"></div>
+        </div>
+
+        <!-- Admin Users Tab (Super Admin Only) -->
+        <div
+          id="adminUsersTab"
+          class="tab-content">
+          <h2>Admin Users Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage admin users. Only super admins can access this section.
+          </p>
+
+          <div class="action-bar">
+            <button
+              id="addAdminUserBtn"
+              class="btn btn-primary">
+              Add New Admin User
+            </button>
+          </div>
+
+          <div
+            id="adminUsersList"
+            class="list-container">
+            <!-- Admin users will be loaded here -->
+          </div>
+
+          <div
+            id="adminUsersResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Add/Edit Admin User Modal -->
+          <div
+            id="adminUserModal"
+            class="modal">
+            <div class="modal-content">
+              <span
+                class="close"
+                id="closeAdminUserModal"
+                >&times;</span
+              >
+              <h3 id="adminUserModalTitle">Add Admin User</h3>
+              <form id="adminUserForm">
+                <input
+                  type="hidden"
+                  id="adminUserId" />
+                <div class="form-group">
+                  <label for="adminUsername">Username</label>
+                  <input
+                    type="text"
+                    id="adminUsername"
+                    placeholder="Enter username"
+                    required />
+                </div>
+                <div class="form-group">
+                  <label for="adminPassword">Password</label>
+                  <input
+                    type="password"
+                    id="adminPassword"
+                    placeholder="Enter password (min 6 characters)" />
+                  <small
+                    >Leave empty to keep current password when editing</small
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="adminEmail">Email</label>
+                  <input
+                    type="email"
+                    id="adminEmail"
+                    placeholder="Enter email (optional)" />
+                </div>
+                <div class="form-group">
+                  <label for="adminFullName">Full Name</label>
+                  <input
+                    type="text"
+                    id="adminFullName"
+                    placeholder="Enter full name (optional)" />
+                </div>
+                <div class="form-group">
+                  <label for="adminRole">Role</label>
+                  <select
+                    id="adminRole"
+                    required>
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="adminIsActive"
+                      checked />
+                    Active
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelAdminUserBtn">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Sessions Tab (Super Admin Only) -->
+        <div
+          id="adminSessionsTab"
+          class="tab-content">
+          <h2>Sessions & Login History</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Monitor admin sessions and login activity. Only super admins can
+            access this section.
+          </p>
+
+          <nav
+            class="tabs"
+            style="background: transparent; border: none; margin-bottom: 20px">
+            <button
+              class="tab-btn active"
+              id="sessionsSubTabBtn"
+              data-subtab="sessions">
+              Active Sessions
+            </button>
+            <button
+              class="tab-btn"
+              id="historySubTabBtn"
+              data-subtab="history">
+              Login History
+            </button>
+          </nav>
+
+          <!-- Sessions Sub-tab -->
+          <div
+            id="sessionsSubTab"
+            class="sub-tab-content">
+            <div class="filters">
+              <div class="form-group">
+                <label for="sessionUserFilter">Filter by User</label>
+                <select id="sessionUserFilter">
+                  <option value="">All Users</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    id="activeSessionsOnly"
+                  checked />
+                Active Sessions Only
+              </label>
+            </div>
+          </div>
+
+            <div
+              id="sessionsList"
+              class="list-container">
+              <!-- Sessions will be loaded here -->
+            </div>
+          </div>
+
+          <!-- History Sub-tab -->
+          <div
+            id="historySubTab"
+            class="sub-tab-content"
+            style="display: none">
+            <div class="filters">
+              <div class="form-group">
+                <label for="historyUserFilter">Filter by User</label>
+                <select id="historyUserFilter">
+                  <option value="">All Users</option>
+                </select>
+              </div>
+            </div>
+
+            <div
+              id="loginHistoryList"
+              class="list-container">
+              <!-- Login history will be loaded here -->
+            </div>
+          </div>
+
+          <div
+            id="sessionsResult"
+            class="result-message"
+            style="display: none"></div>
+        </div>
+
+        <!-- Taxi Contributions Tab -->
+        <div
+          id="taxiContributionsTab"
+          class="tab-content">
+          <h2>Taxi Contributions Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage taxi driver contributions for owner and non-owner drivers.
+          </p>
+
+          <div class="action-bar">
+            <button
+              id="addTaxiContributionBtn"
+              class="btn btn-primary">
+              Add New Contribution
+            </button>
+          </div>
+
+          <div
+            id="taxiContributionsList"
+            class="list-container">
+            <!-- Taxi contributions will be loaded here -->
+          </div>
+
+          <div
+            id="taxiContributionsResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Add/Edit Taxi Contribution Modal -->
+          <div
+            id="taxiContributionModal"
+            class="modal">
+            <div class="modal-content">
+              <span
+                class="close"
+                id="closeTaxiContributionModal"
+                >&times;</span
+              >
+              <h3 id="taxiContributionModalTitle">Add Taxi Contribution</h3>
+              <form id="taxiContributionForm">
+                <input
+                  type="hidden"
+                  id="taxiContributionId" />
+
+                <div class="form-group">
+                  <label for="taxiContributionType">Type *</label>
+                  <select id="taxiContributionType" required>
+                    <option value="">Select Type</option>
+                    <option value="owner">Owner</option>
+                    <option value="non_owner">Non-Owner</option>
+                  </select>
+                </div>
+
+                <div
+                  style="
+                    background: #f0f8ff;
+                    padding: 15px;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    border-left: 4px solid #005544;
+                  ">
+                  <h4 style="margin-bottom: 10px; color: #005544">
+                    English Fields
+                  </h4>
+                  <div class="form-group">
+                    <label for="taxiContributionBranchNameEn">Branch Name (English) *</label>
+                    <input
+                      type="text"
+                      id="taxiContributionBranchNameEn"
+                      placeholder="Enter branch name in English"
+                      required />
+                  </div>
+                </div>
+
+                <div
+                  style="
+                    background: #fff8f0;
+                    padding: 15px;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    border-left: 4px solid #ffc107;
+                  ">
+                  <h4 style="margin-bottom: 10px; color: #d68910">
+                    Arabic Fields
+                  </h4>
+                  <div class="form-group">
+                    <label for="taxiContributionBranchNameAr">Branch Name (Arabic) *</label>
+                    <input
+                      type="text"
+                      id="taxiContributionBranchNameAr"
+                      placeholder="أدخل اسم الفرع بالعربية"
+                      dir="rtl"
+                      required />
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label for="taxiContributionMonthly">Monthly Contribution (LBP) *</label>
+                    <input
+                      type="number"
+                      id="taxiContributionMonthly"
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      required />
+                  </div>
+                  <div class="form-group">
+                    <label for="taxiContributionDaily">Daily Contribution (LBP) *</label>
+                    <input
+                      type="number"
+                      id="taxiContributionDaily"
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      required />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="taxiContributionDisplayOrder">Display Order</label>
+                  <input
+                    type="number"
+                    id="taxiContributionDisplayOrder"
+                    placeholder="0"
+                    min="0"
+                    step="1"
+                    value="0" />
+                  <small>Order for displaying rows (lower numbers appear first)</small>
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn btn-primary">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancelTaxiContributionBtn">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Alerts Tab (Super Admin Only) -->
+        <div
+          id="systemAlertsTab"
+          class="tab-content">
+          <h2>System Alerts & Monitoring</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Track and monitor system errors, warnings, and issues. Only super admins can access this section.
+          </p>
+
+          <!-- Alert Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div class="stat-card" style="border-left: 4px solid #dc3545;">
+              <h4>Unresolved</h4>
+              <p id="unresolvedAlertsCount" class="stat-number">-</p>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #ffc107;">
+              <h4>Critical (24h)</h4>
+              <p id="criticalAlertsCount" class="stat-number">-</p>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #dc3545;">
+              <h4>Errors (7d)</h4>
+              <p id="errorsCount" class="stat-number">-</p>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #ffc107;">
+              <h4>Warnings (7d)</h4>
+              <p id="warningsCount" class="stat-number">-</p>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters">
+            <div class="form-group">
+              <label for="alertTypeFilter">Type</label>
+              <select id="alertTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="critical">Critical</option>
+                <option value="error">Error</option>
+                <option value="warning">Warning</option>
+                <option value="info">Info</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="alertSeverityFilter">Severity</label>
+              <select id="alertSeverityFilter" class="filter-select">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="alertSourceFilter">Source</label>
+              <select id="alertSourceFilter" class="filter-select">
+                <option value="">All Sources</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="alertResolvedFilter">Status</label>
+              <select id="alertResolvedFilter" class="filter-select">
+                <option value="false">Unresolved Only</option>
+                <option value="">All</option>
+                <option value="true">Resolved Only</option>
+              </select>
+            </div>
+            <button
+              id="applyAlertFiltersBtn"
+              class="btn btn-secondary">
+              Apply Filters
+            </button>
+            <button
+              id="deleteResolvedAlertsBtn"
+              class="btn btn-danger">
+              Delete Resolved
+            </button>
+          </div>
+
+          <!-- Bulk Actions Bar -->
+          <div id="bulkActionsBar" class="bulk-actions-bar" style="display: none;">
+            <div class="bulk-actions-left">
+              <input type="checkbox" id="selectAllAlerts" />
+              <label for="selectAllAlerts" style="margin-left: 8px;">
+                <span id="selectedAlertsCount">0</span> selected
+              </label>
+            </div>
+            <div class="bulk-actions-right">
+              <button id="bulkResolveBtn" class="btn btn-success btn-sm">
+                Resolve Selected
+              </button>
+              <select id="bulkSeveritySelect" class="filter-select" style="width: auto; display: inline-block; margin: 0 10px;">
+                <option value="">Change Severity...</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <button id="bulkDeleteBtn" class="btn btn-danger btn-sm">
+                Delete Selected
+              </button>
+            </div>
+          </div>
+
+          <div
+            id="alertsList"
+            class="list-container">
+            <!-- Alerts will be loaded here -->
+          </div>
+
+          <div
+            id="alertsResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <!-- Alert Detail Modal -->
+          <div
+            id="alertModal"
+            class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+              <span class="close" id="closeAlertModal">&times;</span>
+              <h3>Alert Details</h3>
+              <div id="alertDetailsContent">
+                <!-- Details will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script src="cache-manager.js"></script>
+    <script src="app.js"></script>
+    <script src="bulk-alert-functions.js"></script>
+    <script src="announcements.js"></script>
+    <script src="app-versions.js"></script>
+    <script src="taxi-contributions.js"></script>
+  </body>
+</html>
