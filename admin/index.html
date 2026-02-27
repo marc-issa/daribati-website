@@ -159,6 +159,12 @@
                 data-tab="adminUsers">
                 Admin Users
               </button>
+              <button
+                class="tab-btn"
+                id="cleanupTabBtn"
+                data-tab="cleanup">
+                DB Cleanup
+              </button>
             </div>
           </div>
           
@@ -1615,6 +1621,58 @@
                 <!-- Details will be loaded here -->
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- DB Cleanup Tab (Super Admin Only) -->
+        <div
+          id="cleanupTab"
+          class="tab-content">
+          <h2>Database Cleanup</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Run stored procedures to diagnose and clean up duplicate or orphaned device registrations.
+          </p>
+
+          <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 0; min-width: 320px;">
+              <label for="cleanupProcedureSelect">Procedure</label>
+              <select id="cleanupProcedureSelect" class="filter-select" onchange="onCleanupProcedureChange()">
+                <option value="">-- Select a procedure --</option>
+                <option value="duplicates">Show Duplicate Push Tokens (read-only)</option>
+                <option value="preview">Preview Stale Devices (read-only)</option>
+                <option value="execute">Cleanup Duplicate Devices (destructive)</option>
+                <option value="by-token">Cleanup by Push Token (destructive)</option>
+                <option value="siblings">Find Device Siblings (read-only)</option>
+                <option value="orphans">Clean Orphaned Tokens (destructive)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="cleanupTokenInput" style="display: none; margin-bottom: 0; min-width: 300px;">
+              <label for="cleanupPushToken">Push Token</label>
+              <input type="text" id="cleanupPushToken" placeholder="ExponentPushToken[...]" />
+            </div>
+
+            <div class="form-group" id="cleanupUuidInput" style="display: none; margin-bottom: 0; min-width: 300px;">
+              <label for="cleanupDeviceUuid">Device UUID</label>
+              <input type="text" id="cleanupDeviceUuid" placeholder="device-uuid-here" />
+            </div>
+
+            <button
+              id="runCleanupBtn"
+              class="btn btn-primary"
+              onclick="runCleanupProcedure()"
+              disabled>
+              Run Procedure
+            </button>
+          </div>
+
+          <div
+            id="cleanupResult"
+            class="result-message"
+            style="display: none"></div>
+
+          <div id="cleanupResultsArea">
+            <!-- Procedure results will be rendered here -->
           </div>
         </div>
 

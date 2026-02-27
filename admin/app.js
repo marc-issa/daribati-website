@@ -323,6 +323,9 @@ async function refreshCurrentTab() {
       case 'systemAlerts':
         await loadSystemAlerts();
         break;
+      case 'cleanup':
+        await loadCleanup();
+        break;
       default:
         location.reload();
     }
@@ -562,6 +565,8 @@ function switchTab(tabName) {
     loadSystemAlerts();
   } else if (tabName === 'taxiContributions') {
     loadTaxiContributions();
+  } else if (tabName === 'cleanup') {
+    loadCleanup();
   }
 }
 
@@ -4003,3 +4008,145 @@ window.onclick = function (event) {
     closeTaxiContributionModal();
   }
 };
+
+
+// ==========================================
+// DB Cleanup Tab
+// ==========================================
+
+const CLEANUP_PROCEDURES = {
+  duplicates:  { method: 'GET',  endpoint: '/api/admin/cleanup/duplicates', destructive: false, param: null },
+  preview:     { method: 'GET',  endpoint: '/api/admin/cleanup/preview',    destructive: false, param: null },
+  execute:     { method: 'POST', endpoint: '/api/admin/cleanup/execute',    destructive: true,  param: null },
+  'by-token':  { method: 'POST', endpoint: '/api/admin/cleanup/by-token',  destructive: true,  param: 'token' },
+  siblings:    { method: 'GET',  endpoint: '/api/admin/cleanup/siblings',   destructive: false, param: 'uuid' },
+  orphans:     { method: 'POST', endpoint: '/api/admin/cleanup/orphans',    destructive: true,  param: null },
+};
+
+async function loadCleanup() {
+  // No auto-execution on tab load — user picks a procedure
+  document.getElementById('cleanupResultsArea').innerHTML =
+    '<p style="color: #888; text-align: center; padding: 40px 0;">Select a procedure and click "Run Procedure" to see results.</p>';
+  document.getElementById('cleanupResult').style.display = 'none';
+}
+
+function onCleanupProcedureChange() {
+  const selected = document.getElementById('cleanupProcedureSelect').value;
+  const tokenInput = document.getElementById('cleanupTokenInput');
+  const uuidInput = document.getElementById('cleanupUuidInput');
+  const runBtn = document.getElementById('runCleanupBtn');
+
+  tokenInput.style.display = 'none';
+  uuidInput.style.display = 'none';
+
+  if (!selected) {
+    runBtn.disabled = true;
+    return;
+  }
+
+  runBtn.disabled = false;
+  const proc = CLEANUP_PROCEDURES[selected];
+  if (proc.param === 'token') tokenInput.style.display = 'block';
+  if (proc.param === 'uuid') uuidInput.style.display = 'block';
+}
+
+async function runCleanupProcedure() {
+  const selected = document.getElementById('cleanupProcedureSelect').value;
+  if (!selected) return;
+
+  const proc = CLEANUP_PROCEDURES[selected];
+  const resultMsg = document.getElementById('cleanupResult');
+  const resultsArea = document.getElementById('cleanupResultsArea');
+
+  // Confirm destructive operations
+  if (proc.destructive) {
+    const label = document.getElementById('cleanupProcedureSelect').selectedOptions[0].text;
+    if (!confirm(`This is a DESTRUCTIVE operation:\n\n"${label}"\n\nAre you sure you want to proceed?`)) {
+      return;
+    }
+  }
+
+  // Validate required parameters
+  if (proc.param === 'token') {
+    const token = document.getElementById('cleanupPushToken').value.trim();
+    if (!token) {
+      resultMsg.textContent = 'Please enter a push token.';
+      resultMsg.className = 'result-message error';
+      resultMsg.style.display = 'block';
+      return;
+    }
+  }
+  if (proc.param === 'uuid') {
+    const uuid = document.getElementById('cleanupDeviceUuid').value.trim();
+    if (!uuid) {
+      resultMsg.textContent = 'Please enter a device UUID.';
+      resultMsg.className = 'result-message error';
+      resultMsg.style.display = 'block';
+      return;
+    }
+  }
+
+  // Build request
+  let endpoint = proc.endpoint;
+  const options = { method: proc.method };
+
+  if (proc.param === 'token') {
+    options.body = JSON.stringify({ token: document.getElementById('cleanupPushToken').value.trim() });
+  }
+  if (proc.param === 'uuid') {
+    const uuid = document.getElementById('cleanupDeviceUuid').value.trim();
+    endpoint += `?uuid=${encodeURIComponent(uuid)}`;
+  }
+
+  // Execute
+  resultsArea.innerHTML = '<p style="text-align: center; padding: 20px;">Running procedure...</p>';
+  resultMsg.style.display = 'none';
+
+  try {
+    const response = await makeRequest(endpoint, options);
+
+    if (!response.success) {
+      throw new Error(response.error || 'Procedure failed');
+    }
+
+    const data = response.data;
+    if (!data || data.length === 0) {
+      resultsArea.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No results returned.</p>';
+      resultMsg.textContent = 'Procedure executed successfully — 0 rows returned.';
+    } else {
+      resultsArea.innerHTML = renderCleanupResultTable(data);
+      resultMsg.textContent = `Procedure executed successfully — ${data.length} row(s) returned.`;
+    }
+    resultMsg.className = 'result-message success';
+    resultMsg.style.display = 'block';
+  } catch (err) {
+    console.error('Cleanup procedure error:', err);
+    resultsArea.innerHTML = '';
+    resultMsg.textContent = `Error: ${err.message}`;
+    resultMsg.className = 'result-message error';
+    resultMsg.style.display = 'block';
+  }
+}
+
+function renderCleanupResultTable(data) {
+  if (!data || data.length === 0) return '';
+
+  const columns = Object.keys(data[0]);
+  let html = '<div style="overflow-x: auto;"><table class="data-table"><thead><tr>';
+  columns.forEach(col => {
+    html += `<th>${col}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  data.forEach(row => {
+    html += '<tr>';
+    columns.forEach(col => {
+      const val = row[col];
+      html += `<td>${val !== null && val !== undefined ? val : '<em>NULL</em>'}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
