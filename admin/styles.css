@@ -1099,58 +1099,124 @@ label:has(input[type="checkbox"]) {
 }
 
 /* Data Tables (DB Cleanup) */
+.data-table-wrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    background: white;
+    -webkit-overflow-scrolling: touch;
+}
+
 .data-table {
     width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    font-size: 14px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    table-layout: auto;
 }
 
 .data-table thead th {
-    background: #005544;
+    background: #00473a;
     color: white;
-    padding: 12px 16px;
+    padding: 11px 20px;
     text-align: left;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.data-table thead th:first-child {
+    border-radius: 10px 0 0 0;
+}
+
+.data-table thead th:last-child {
+    border-radius: 0 10px 0 0;
 }
 
 .data-table tbody td {
-    padding: 10px 16px;
-    border-bottom: 1px solid #e9ecef;
-    color: #333;
-    vertical-align: top;
+    padding: 10px 20px;
+    border-bottom: 1px solid #eef0f2;
+    color: #374151;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
 .data-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.data-table tbody tr:hover {
-    background: #f0f7f5;
-}
-
 .data-table tbody tr:nth-child(even) {
-    background: #f8f9fa;
+    background: #f8fafb;
 }
 
-.data-table tbody tr:nth-child(even):hover {
-    background: #f0f7f5;
+.data-table tbody tr:hover {
+    background: #edf5f3;
 }
 
-.data-table-wrapper {
-    overflow-x: auto;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+/* Token cells — truncate with tooltip */
+.data-table .cell-token {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    color: #6b7280;
+    cursor: default;
 }
 
-.data-table-wrapper .data-table {
-    box-shadow: none;
-    border-radius: 0;
+/* UUID cells */
+.data-table .cell-uuid {
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    color: #6b7280;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default;
+}
+
+/* Date cells */
+.data-table .cell-date {
+    white-space: nowrap;
+    color: #6b7280;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Null cells */
+.data-table .cell-null {
+    color: #c0c5cc;
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Numeric cells */
+.data-table .cell-number {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Summary cells */
+.data-table .cell-summary {
+    max-width: 350px;
+    white-space: normal;
+    line-height: 1.45;
+}
+
+/* Standalone data-table (reference table, no wrapper) */
+.data-table:not(.data-table-wrapper .data-table) {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 /* Cleanup tab */
@@ -1170,20 +1236,37 @@ label:has(input[type="checkbox"]) {
     display: inline-block;
     padding: 3px 10px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    background: #d4edda;
-    color: #155724;
+    background: #d1fae5;
+    color: #065f46;
+    letter-spacing: 0.02em;
 }
 
 .badge-destructive {
     display: inline-block;
     padding: 3px 10px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    background: #f8d7da;
-    color: #721c24;
+    background: #fee2e2;
+    color: #991b1b;
+    letter-spacing: 0.02em;
+}
+
+/* Results summary bar */
+.cleanup-results-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #166534;
+    font-weight: 500;
 }
 
 /* Responsive */
@@ -1518,13 +1601,18 @@ label:has(input[type="checkbox"]) {
   }
 
   .data-table thead th {
-    padding: 10px 12px;
-    font-size: 12px;
+    padding: 9px 14px;
+    font-size: 11px;
   }
 
   .data-table tbody td {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .data-table .cell-token,
+  .data-table .cell-uuid {
+    max-width: 150px;
   }
 
   .cleanup-controls {

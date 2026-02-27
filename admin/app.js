@@ -4123,14 +4123,11 @@ async function runCleanupProcedure() {
 
     const data = response.data;
     if (!data || data.length === 0) {
-      resultsArea.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No results returned.</p>';
-      resultMsg.textContent = 'Procedure executed successfully — 0 rows returned.';
+      resultsArea.innerHTML = '<div class="cleanup-results-summary"><span>Procedure executed successfully — no rows returned.</span></div>';
     } else {
       resultsArea.innerHTML = renderCleanupResultTable(data);
-      resultMsg.textContent = `Procedure executed successfully — ${data.length} row(s) returned.`;
     }
-    resultMsg.className = 'result-message success';
-    resultMsg.style.display = 'block';
+    resultMsg.style.display = 'none';
   } catch (err) {
     console.error('Cleanup procedure error:', err);
     resultsArea.innerHTML = '';
@@ -4140,13 +4137,84 @@ async function runCleanupProcedure() {
   }
 }
 
+// Date columns to format
+const DATE_COLUMNS = new Set([
+  'last_login', 'device_created_at', 'token_updated_at',
+  'created_at', 'updated_at', 'registered_at', 'expires_at'
+]);
+
+// Token / UUID columns to truncate
+const TOKEN_COLUMNS = new Set(['push_token', 'token', 'refresh_token']);
+const UUID_COLUMNS = new Set(['device_uuid', 'uuid', 'keeper_uuid']);
+
+// Numeric columns
+const NUMBER_COLUMNS = new Set([
+  'device_count', 'duplicate_count', 'devices_deleted',
+  'orphaned_refresh_tokens_deleted', 'orphaned_push_tokens_deleted', 'count'
+]);
+
+// Summary / text columns
+const SUMMARY_COLUMNS = new Set(['summary', 'message', 'description']);
+
+function formatCleanupDate(val) {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return val;
+  const day = d.getDate().toString().padStart(2, '0');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mon = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, '0');
+  const mins = d.getMinutes().toString().padStart(2, '0');
+  return `${day} ${mon} ${year}, ${hours}:${mins}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function getCellClass(col) {
+  if (DATE_COLUMNS.has(col)) return 'cell-date';
+  if (TOKEN_COLUMNS.has(col)) return 'cell-token';
+  if (UUID_COLUMNS.has(col)) return 'cell-uuid';
+  if (NUMBER_COLUMNS.has(col)) return 'cell-number';
+  if (SUMMARY_COLUMNS.has(col)) return 'cell-summary';
+  return '';
+}
+
+function formatCellValue(col, val) {
+  if (val === null || val === undefined) {
+    return '<td class="cell-null">NULL</td>';
+  }
+
+  const cls = getCellClass(col);
+  const escaped = escapeHtml(String(val));
+
+  if (DATE_COLUMNS.has(col)) {
+    return `<td class="${cls}">${formatCleanupDate(val)}</td>`;
+  }
+
+  if (TOKEN_COLUMNS.has(col) || UUID_COLUMNS.has(col)) {
+    return `<td class="${cls}" title="${escaped}">${escaped}</td>`;
+  }
+
+  return `<td${cls ? ` class="${cls}"` : ''}>${escaped}</td>`;
+}
+
 function renderCleanupResultTable(data) {
   if (!data || data.length === 0) return '';
 
   const columns = Object.keys(data[0]);
-  let html = '<div class="data-table-wrapper"><table class="data-table"><thead><tr>';
+
+  let html = `<div class="cleanup-results-summary">`;
+  html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+  html += `<span>Returned <strong>${data.length}</strong> row${data.length !== 1 ? 's' : ''}</span>`;
+  html += `</div>`;
+
+  html += '<div class="data-table-wrapper"><table class="data-table"><thead><tr>';
   columns.forEach(col => {
-    // Format column headers: replace underscores with spaces, title case
     const label = col.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     html += `<th>${label}</th>`;
   });
@@ -4155,12 +4223,7 @@ function renderCleanupResultTable(data) {
   data.forEach(row => {
     html += '<tr>';
     columns.forEach(col => {
-      const val = row[col];
-      if (val === null || val === undefined) {
-        html += '<td style="color: #999; font-style: italic;">NULL</td>';
-      } else {
-        html += `<td>${val}</td>`;
-      }
+      html += formatCellValue(col, row[col]);
     });
     html += '</tr>';
   });
