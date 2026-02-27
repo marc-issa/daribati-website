@@ -173,14 +173,6 @@ function setupEventListeners() {
     .getElementById('cancelTaxiContributionBtn')
     .addEventListener('click', closeTaxiContributionModal);
 
-  // DB Cleanup
-  document
-    .getElementById('cleanupProcedureSelect')
-    ?.addEventListener('change', onCleanupProcedureChange);
-  document
-    .getElementById('runCleanupBtn')
-    ?.addEventListener('click', runCleanupProcedure);
-
   // Add keyboard shortcuts
   setupKeyboardShortcuts();
 
@@ -4031,11 +4023,22 @@ const CLEANUP_PROCEDURES = {
   orphans:     { method: 'POST', endpoint: '/api/admin/cleanup/orphans',    destructive: true,  param: null },
 };
 
+let cleanupListenersBound = false;
+
 async function loadCleanup() {
   // No auto-execution on tab load — user picks a procedure
   document.getElementById('cleanupResultsArea').innerHTML =
     '<p style="color: #888; text-align: center; padding: 40px 0;">Select a procedure and click "Run Procedure" to see results.</p>';
   document.getElementById('cleanupResult').style.display = 'none';
+
+  // Bind event listeners once
+  if (!cleanupListenersBound) {
+    document.getElementById('cleanupProcedureSelect')
+      .addEventListener('change', onCleanupProcedureChange);
+    document.getElementById('runCleanupBtn')
+      .addEventListener('click', runCleanupProcedure);
+    cleanupListenersBound = true;
+  }
 }
 
 function onCleanupProcedureChange() {
