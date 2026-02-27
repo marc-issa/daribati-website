@@ -173,6 +173,14 @@ function setupEventListeners() {
     .getElementById('cancelTaxiContributionBtn')
     .addEventListener('click', closeTaxiContributionModal);
 
+  // DB Cleanup
+  document
+    .getElementById('cleanupProcedureSelect')
+    ?.addEventListener('change', onCleanupProcedureChange);
+  document
+    .getElementById('runCleanupBtn')
+    ?.addEventListener('click', runCleanupProcedure);
+
   // Add keyboard shortcuts
   setupKeyboardShortcuts();
 

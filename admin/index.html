@@ -1681,7 +1681,7 @@
           <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
             <div class="form-group" style="margin-bottom: 0; min-width: 320px;">
               <label for="cleanupProcedureSelect">Procedure</label>
-              <select id="cleanupProcedureSelect" class="filter-select" onchange="onCleanupProcedureChange()">
+              <select id="cleanupProcedureSelect" class="filter-select">
                 <option value="">-- Select a procedure --</option>
                 <option value="duplicates">Show Duplicate Push Tokens (read-only)</option>
                 <option value="preview">Preview Stale Devices (read-only)</option>
@@ -1704,8 +1704,7 @@
 
             <button
               id="runCleanupBtn"
-              class="btn btn-primary"
-              onclick="runCleanupProcedure()">
+              class="btn btn-primary">
               Run Procedure
             </button>
           </div>
