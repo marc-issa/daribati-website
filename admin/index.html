@@ -1634,7 +1634,7 @@
           </p>
 
           <!-- Procedure Reference Table -->
-          <div style="overflow-x: auto; margin-bottom: 25px;">
+          <div class="data-table-wrapper" style="margin-bottom: 25px;">
             <table class="data-table">
               <thead>
                 <tr>
@@ -1646,40 +1646,40 @@
               <tbody>
                 <tr>
                   <td><strong>Show Duplicate Push Tokens</strong></td>
-                  <td><span style="color: #28a745;">Read-only</span></td>
-                  <td>Lists all push tokens that are shared across multiple device UUIDs, showing the duplicate count for each.</td>
+                  <td><span class="badge-readonly">Read-only</span></td>
+                  <td>Lists all push tokens shared across multiple device UUIDs, showing the duplicate count for each.</td>
                 </tr>
                 <tr>
                   <td><strong>Preview Stale Devices</strong></td>
-                  <td><span style="color: #28a745;">Read-only</span></td>
-                  <td>Dry run — shows which stale device registrations would be deleted without actually removing them.</td>
+                  <td><span class="badge-readonly">Read-only</span></td>
+                  <td>Dry run — shows which devices would be deleted without actually removing them.</td>
                 </tr>
                 <tr>
                   <td><strong>Cleanup Duplicate Devices</strong></td>
-                  <td><span style="color: #dc3545;">Destructive</span></td>
+                  <td><span class="badge-destructive">Destructive</span></td>
                   <td>Deletes stale duplicate devices, keeping only the most recently active UUID per push token.</td>
                 </tr>
                 <tr>
                   <td><strong>Cleanup by Push Token</strong></td>
-                  <td><span style="color: #dc3545;">Destructive</span></td>
-                  <td>Targeted cleanup for a specific push token — removes all duplicate device registrations sharing that token, keeping the most recent.</td>
+                  <td><span class="badge-destructive">Destructive</span></td>
+                  <td>Targeted cleanup for a specific push token — removes duplicate device registrations sharing that token.</td>
                 </tr>
                 <tr>
                   <td><strong>Find Device Siblings</strong></td>
-                  <td><span style="color: #28a745;">Read-only</span></td>
-                  <td>Given one device UUID, finds all other UUIDs that share the same push token (sibling devices from app reinstalls).</td>
+                  <td><span class="badge-readonly">Read-only</span></td>
+                  <td>Given one device UUID, finds all other UUIDs sharing the same push token (sibling devices from reinstalls).</td>
                 </tr>
                 <tr>
                   <td><strong>Clean Orphaned Tokens</strong></td>
-                  <td><span style="color: #dc3545;">Destructive</span></td>
-                  <td>Deletes orphaned refresh tokens and push tokens whose device_uuid no longer exists in the users_uuid table.</td>
+                  <td><span class="badge-destructive">Destructive</span></td>
+                  <td>Deletes orphaned refresh tokens and push tokens whose device_uuid no longer exists in users_uuid.</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
-            <div class="form-group" style="margin-bottom: 0; min-width: 320px;">
+          <div class="cleanup-controls">
+            <div class="form-group" style="min-width: 320px;">
               <label for="cleanupProcedureSelect">Procedure</label>
               <select id="cleanupProcedureSelect" class="filter-select">
                 <option value="">-- Select a procedure --</option>
@@ -1692,12 +1692,12 @@
               </select>
             </div>
 
-            <div class="form-group" id="cleanupTokenInput" style="display: none; margin-bottom: 0; min-width: 300px;">
+            <div class="form-group" id="cleanupTokenInput" style="display: none; min-width: 300px;">
               <label for="cleanupPushToken">Push Token</label>
               <input type="text" id="cleanupPushToken" placeholder="ExponentPushToken[...]" />
             </div>
 
-            <div class="form-group" id="cleanupUuidInput" style="display: none; margin-bottom: 0; min-width: 300px;">
+            <div class="form-group" id="cleanupUuidInput" style="display: none; min-width: 300px;">
               <label for="cleanupDeviceUuid">Device UUID</label>
               <input type="text" id="cleanupDeviceUuid" placeholder="device-uuid-here" />
             </div>

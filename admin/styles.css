@@ -1098,6 +1098,94 @@ label:has(input[type="checkbox"]) {
     margin-bottom: 0;
 }
 
+/* Data Tables (DB Cleanup) */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-size: 14px;
+}
+
+.data-table thead th {
+    background: #005544;
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.data-table tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #e9ecef;
+    color: #333;
+    vertical-align: top;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background: #f0f7f5;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.data-table tbody tr:nth-child(even):hover {
+    background: #f0f7f5;
+}
+
+.data-table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.data-table-wrapper .data-table {
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Cleanup tab */
+.cleanup-controls {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.cleanup-controls .form-group {
+    margin-bottom: 0;
+}
+
+.badge-readonly {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-destructive {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f8d7da;
+    color: #721c24;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header {
@@ -1427,6 +1515,25 @@ label:has(input[type="checkbox"]) {
   th, td {
     padding: 8px;
     min-width: 100px;
+  }
+
+  .data-table thead th {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .data-table tbody td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .cleanup-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cleanup-controls .form-group {
+    min-width: 100% !important;
   }
 
   /* Pagination */

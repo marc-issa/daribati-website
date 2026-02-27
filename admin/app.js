@@ -4144,9 +4144,11 @@ function renderCleanupResultTable(data) {
   if (!data || data.length === 0) return '';
 
   const columns = Object.keys(data[0]);
-  let html = '<div style="overflow-x: auto;"><table class="data-table"><thead><tr>';
+  let html = '<div class="data-table-wrapper"><table class="data-table"><thead><tr>';
   columns.forEach(col => {
-    html += `<th>${col}</th>`;
+    // Format column headers: replace underscores with spaces, title case
+    const label = col.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    html += `<th>${label}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -4154,7 +4156,11 @@ function renderCleanupResultTable(data) {
     html += '<tr>';
     columns.forEach(col => {
       const val = row[col];
-      html += `<td>${val !== null && val !== undefined ? val : '<em>NULL</em>'}</td>`;
+      if (val === null || val === undefined) {
+        html += '<td style="color: #999; font-style: italic;">NULL</td>';
+      } else {
+        html += `<td>${val}</td>`;
+      }
     });
     html += '</tr>';
   });
