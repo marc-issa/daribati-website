@@ -4034,17 +4034,12 @@ function onCleanupProcedureChange() {
   const selected = document.getElementById('cleanupProcedureSelect').value;
   const tokenInput = document.getElementById('cleanupTokenInput');
   const uuidInput = document.getElementById('cleanupUuidInput');
-  const runBtn = document.getElementById('runCleanupBtn');
 
   tokenInput.style.display = 'none';
   uuidInput.style.display = 'none';
 
-  if (!selected) {
-    runBtn.disabled = true;
-    return;
-  }
+  if (!selected) return;
 
-  runBtn.disabled = false;
   const proc = CLEANUP_PROCEDURES[selected];
   if (proc.param === 'token') tokenInput.style.display = 'block';
   if (proc.param === 'uuid') uuidInput.style.display = 'block';
@@ -4052,11 +4047,17 @@ function onCleanupProcedureChange() {
 
 async function runCleanupProcedure() {
   const selected = document.getElementById('cleanupProcedureSelect').value;
-  if (!selected) return;
-
-  const proc = CLEANUP_PROCEDURES[selected];
   const resultMsg = document.getElementById('cleanupResult');
   const resultsArea = document.getElementById('cleanupResultsArea');
+
+  if (!selected) {
+    resultMsg.textContent = 'Please select a procedure first.';
+    resultMsg.className = 'result-message error';
+    resultMsg.style.display = 'block';
+    return;
+  }
+
+  const proc = CLEANUP_PROCEDURES[selected];
 
   // Confirm destructive operations
   if (proc.destructive) {
