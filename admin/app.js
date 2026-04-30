@@ -173,6 +173,13 @@ function setupEventListeners() {
     .getElementById('cancelTaxiContributionBtn')
     .addEventListener('click', closeTaxiContributionModal);
 
+  // Useful Links
+  document.getElementById('addUsefulLinkBtn').addEventListener('click', () => openUsefulLinkModal());
+  document.getElementById('usefulLinkForm').addEventListener('submit', handleSaveUsefulLink);
+  document.getElementById('closeUsefulLinkModal').addEventListener('click', closeUsefulLinkModal);
+  document.getElementById('cancelUsefulLinkBtn').addEventListener('click', closeUsefulLinkModal);
+  document.getElementById('applyUsefulLinkFiltersBtn').addEventListener('click', loadUsefulLinks);
+
   // Add keyboard shortcuts
   setupKeyboardShortcuts();
 
@@ -239,6 +246,7 @@ function setupKeyboardShortcuts() {
       closeAdminUserModal();
       closeFeedbackModal();
       closeAlertModal();
+      closeUsefulLinkModal();
     }
 
     // Ctrl/Cmd + K - Focus search/filter inputs
@@ -313,6 +321,9 @@ async function refreshCurrentTab() {
         break;
       case 'taxiContributions':
         await loadTaxiContributions();
+        break;
+      case 'usefulLinks':
+        await loadUsefulLinks();
         break;
       case 'adminUsers':
         await loadAdminUsers();
@@ -565,6 +576,8 @@ function switchTab(tabName) {
     loadSystemAlerts();
   } else if (tabName === 'taxiContributions') {
     loadTaxiContributions();
+  } else if (tabName === 'usefulLinks') {
+    loadUsefulLinks();
   } else if (tabName === 'cleanup') {
     loadCleanup();
   }
@@ -4007,8 +4020,226 @@ window.onclick = function (event) {
   if (event.target === taxiContributionModal) {
     closeTaxiContributionModal();
   }
+  const usefulLinkModal = document.getElementById('usefulLinkModal');
+  if (event.target === usefulLinkModal) {
+    closeUsefulLinkModal();
+  }
 };
 
+
+// ==========================================
+// Useful Links Tab
+// ==========================================
+
+const CATEGORY_LABELS = {
+  ministry: 'Ministries',
+  public_administration: 'Public Administration',
+  finance_contacts: 'Finance Contacts',
+  others: 'Others',
+};
+
+const CATEGORY_COLORS = {
+  ministry: '#005544',
+  public_administration: '#0066cc',
+  finance_contacts: '#8B4513',
+  others: '#666666',
+};
+
+async function loadUsefulLinks() {
+  const container = document.getElementById('usefulLinksList');
+  const statsContainer = document.getElementById('usefulLinksStats');
+
+  try {
+    container.innerHTML = '<div class="loading">Loading useful links...</div>';
+
+    const category = document.getElementById('usefulLinkCategoryFilter').value;
+    const active = document.getElementById('usefulLinkActiveFilter').value;
+
+    let endpoint = '/api/admin/useful-links?';
+    if (category) endpoint += `category=${encodeURIComponent(category)}&`;
+    if (active !== '') endpoint += `active=${active}`;
+
+    const links = await makeRequest(endpoint.replace(/[?&]$/, ''));
+
+    // Stats
+    const total = links.length;
+    const activeCount = links.filter(l => l.active).length;
+    const byCat = {};
+    links.forEach(l => { byCat[l.category] = (byCat[l.category] || 0) + 1; });
+
+    statsContainer.innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Links</div><div class="stat-value">${total}</div></div>
+      <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" style="color:#28a745">${activeCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Inactive</div><div class="stat-value" style="color:#dc3545">${total - activeCount}</div></div>
+      ${Object.entries(byCat).map(([cat, count]) => `
+        <div class="stat-card"><div class="stat-label">${CATEGORY_LABELS[cat] || cat}</div><div class="stat-value">${count}</div></div>
+      `).join('')}
+    `;
+
+    displayUsefulLinks(links);
+  } catch (error) {
+    console.error('Load useful links error:', error);
+    container.innerHTML = createEmptyState('Error loading useful links', error.message);
+  }
+}
+
+function displayUsefulLinks(links) {
+  const container = document.getElementById('usefulLinksList');
+
+  if (links.length === 0) {
+    container.innerHTML = createEmptyState('No useful links found', 'Add your first link using the button above');
+    return;
+  }
+
+  // Group by category preserving order
+  const categoryOrder = ['ministry', 'public_administration', 'finance_contacts', 'others'];
+  const grouped = {};
+  links.forEach(l => {
+    if (!grouped[l.category]) grouped[l.category] = [];
+    grouped[l.category].push(l);
+  });
+
+  let html = '';
+  categoryOrder.forEach(cat => {
+    if (!grouped[cat] || grouped[cat].length === 0) return;
+    const color = CATEGORY_COLORS[cat] || '#333';
+    html += `
+      <div style="margin-bottom: 30px;">
+        <h3 style="color: ${color}; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${color}; display: flex; align-items: center; gap: 8px;">
+          ${CATEGORY_LABELS[cat] || cat}
+          <span style="font-size: 13px; font-weight: normal; color: #666;">(${grouped[cat].length})</span>
+        </h3>
+        ${grouped[cat].map(link => createUsefulLinkItem(link)).join('')}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function createUsefulLinkItem(link) {
+  const isEmail = link.url.startsWith('mailto:');
+  const statusBadge = link.active
+    ? '<span class="badge badge-success" style="font-size:11px;">Active</span>'
+    : '<span class="badge" style="background:#dc3545;color:white;font-size:11px;">Inactive</span>';
+  const typeIcon = isEmail ? '✉️' : '🔗';
+  const displayUrl = isEmail ? link.url.replace('mailto:', '') : link.url;
+
+  return `
+    <div class="list-item" style="border-left: 3px solid ${CATEGORY_COLORS[link.category] || '#ccc'};">
+      <div class="list-item-header">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+            <span class="list-item-title" style="font-size: 14px;">${typeIcon} ${escapeHtml(link.title_en)}</span>
+            ${statusBadge}
+            <span style="font-size: 11px; color: #888;">Order: ${link.display_order}</span>
+          </div>
+          <div style="font-size: 13px; color: #666; margin-bottom: 4px; direction: rtl; text-align: right;">
+            ${escapeHtml(link.title_ar)}
+          </div>
+          <div style="font-size: 12px; color: ${CATEGORY_COLORS[link.category] || '#333'}; word-break: break-all;">
+            ${escapeHtml(displayUrl)}
+          </div>
+        </div>
+        <div class="list-item-actions" style="flex-shrink: 0; margin-left: 12px;">
+          <button onclick="editUsefulLink(${link.id})" class="btn btn-sm btn-primary">Edit</button>
+          <button onclick="toggleUsefulLink(${link.id}, ${link.active})" class="btn btn-sm ${link.active ? 'btn-secondary' : 'btn-success'}">
+            ${link.active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button onclick="deleteUsefulLink(${link.id})" class="btn btn-sm btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openUsefulLinkModal(id = null) {
+  const modal = document.getElementById('usefulLinkModal');
+  if (!id) {
+    document.getElementById('usefulLinkModalTitle').textContent = 'Add Useful Link';
+    document.getElementById('usefulLinkForm').reset();
+    document.getElementById('usefulLinkId').value = '';
+    document.getElementById('usefulLinkOrder').value = '0';
+    document.getElementById('usefulLinkActive').checked = true;
+  }
+  modal.style.display = 'block';
+}
+
+function closeUsefulLinkModal() {
+  document.getElementById('usefulLinkModal').style.display = 'none';
+  document.getElementById('usefulLinkForm').reset();
+}
+
+async function editUsefulLink(id) {
+  try {
+    const link = await makeRequest(`/api/admin/useful-links/${id}`);
+    document.getElementById('usefulLinkModalTitle').textContent = 'Edit Useful Link';
+    document.getElementById('usefulLinkId').value = link.id;
+    document.getElementById('usefulLinkCategory').value = link.category;
+    document.getElementById('usefulLinkTitleEn').value = link.title_en;
+    document.getElementById('usefulLinkTitleAr').value = link.title_ar;
+    document.getElementById('usefulLinkUrl').value = link.url;
+    document.getElementById('usefulLinkOrder').value = link.display_order;
+    document.getElementById('usefulLinkActive').checked = link.active;
+    document.getElementById('usefulLinkModal').style.display = 'block';
+  } catch (error) {
+    showResult('usefulLinksResult', error.message, 'error');
+  }
+}
+
+async function toggleUsefulLink(id, currentlyActive) {
+  const action = currentlyActive ? 'deactivate' : 'activate';
+  if (!confirm(`Are you sure you want to ${action} this link?`)) return;
+  try {
+    const result = await makeRequest(`/api/admin/useful-links/${id}/toggle`, { method: 'PUT' });
+    showResult('usefulLinksResult', result.message, 'success');
+    loadUsefulLinks();
+  } catch (error) {
+    showResult('usefulLinksResult', error.message, 'error');
+  }
+}
+
+async function deleteUsefulLink(id) {
+  if (!confirm('Are you sure you want to permanently delete this link?')) return;
+  try {
+    await makeRequest(`/api/admin/useful-links/${id}`, { method: 'DELETE' });
+    showResult('usefulLinksResult', 'Link deleted successfully', 'success');
+    loadUsefulLinks();
+  } catch (error) {
+    showResult('usefulLinksResult', error.message, 'error');
+  }
+}
+
+async function handleSaveUsefulLink(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true);
+
+  const id = document.getElementById('usefulLinkId').value;
+  const isEdit = !!id;
+
+  const formData = {
+    category: document.getElementById('usefulLinkCategory').value,
+    title_en: document.getElementById('usefulLinkTitleEn').value.trim(),
+    title_ar: document.getElementById('usefulLinkTitleAr').value.trim(),
+    url: document.getElementById('usefulLinkUrl').value.trim(),
+    display_order: parseInt(document.getElementById('usefulLinkOrder').value) || 0,
+    active: document.getElementById('usefulLinkActive').checked,
+  };
+
+  try {
+    const endpoint = isEdit ? `/api/admin/useful-links/${id}` : '/api/admin/useful-links';
+    const method = isEdit ? 'PUT' : 'POST';
+    await makeRequest(endpoint, { method, body: JSON.stringify(formData) });
+    showResult('usefulLinksResult', `Link ${isEdit ? 'updated' : 'created'} successfully`, 'success');
+    closeUsefulLinkModal();
+    loadUsefulLinks();
+  } catch (error) {
+    showResult('usefulLinksResult', error.message, 'error');
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
+}
 
 // ==========================================
 // DB Cleanup Tab

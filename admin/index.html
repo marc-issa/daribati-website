@@ -131,6 +131,11 @@
                 data-tab="taxiContributions">
                 Taxi Contributions
               </button>
+              <button
+                class="tab-btn"
+                data-tab="usefulLinks">
+                Useful Links
+              </button>
             </div>
             
             <!-- Super Admin Tabs Row (Super Admins Only) -->
@@ -1620,6 +1625,104 @@
               <div id="alertDetailsContent">
                 <!-- Details will be loaded here -->
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Useful Links Tab -->
+        <div
+          id="usefulLinksTab"
+          class="tab-content">
+          <h2>Useful Links Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage useful links shown on the home screen of the app. Organize by category and control visibility.
+          </p>
+
+          <div class="action-bar" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+            <button id="addUsefulLinkBtn" class="btn btn-primary">Add New Link</button>
+            <select id="usefulLinkCategoryFilter" class="filter-select" style="min-width: 180px;">
+              <option value="">All Categories</option>
+              <option value="ministry">Ministries</option>
+              <option value="public_administration">Public Administration</option>
+              <option value="finance_contacts">Finance Contacts</option>
+              <option value="others">Others</option>
+            </select>
+            <select id="usefulLinkActiveFilter" class="filter-select" style="min-width: 140px;">
+              <option value="">All Status</option>
+              <option value="true">Active Only</option>
+              <option value="false">Inactive Only</option>
+            </select>
+            <button id="applyUsefulLinkFiltersBtn" class="btn btn-secondary">Apply Filters</button>
+          </div>
+
+          <!-- Stats row -->
+          <div id="usefulLinksStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;"></div>
+
+          <div id="usefulLinksList" class="list-container"></div>
+
+          <div id="usefulLinksResult" class="result-message" style="display: none"></div>
+
+          <!-- Add/Edit Useful Link Modal -->
+          <div id="usefulLinkModal" class="modal">
+            <div class="modal-content" style="max-width: 620px;">
+              <span class="close" id="closeUsefulLinkModal">&times;</span>
+              <h3 id="usefulLinkModalTitle">Add Useful Link</h3>
+              <form id="usefulLinkForm">
+                <input type="hidden" id="usefulLinkId" />
+
+                <div class="form-group">
+                  <label for="usefulLinkCategory">Category *</label>
+                  <select id="usefulLinkCategory" required>
+                    <option value="">Select Category</option>
+                    <option value="ministry">Ministries</option>
+                    <option value="public_administration">Public Administration</option>
+                    <option value="finance_contacts">Finance Contacts (Ministry of Finance emails)</option>
+                    <option value="others">Others</option>
+                  </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 5px;">
+                  <div style="background: #f0f8ff; padding: 15px; border-radius: 4px; border-left: 4px solid #005544;">
+                    <h4 style="margin-bottom: 10px; color: #005544;">English</h4>
+                    <div class="form-group">
+                      <label for="usefulLinkTitleEn">Title (English) *</label>
+                      <input type="text" id="usefulLinkTitleEn" placeholder="e.g., Ministry of Finance" required />
+                    </div>
+                  </div>
+                  <div style="background: #fff8f0; padding: 15px; border-radius: 4px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin-bottom: 10px; color: #d68910;">Arabic</h4>
+                    <div class="form-group">
+                      <label for="usefulLinkTitleAr">Title (Arabic) *</label>
+                      <input type="text" id="usefulLinkTitleAr" placeholder="مثلاً: وزارة المالية" dir="rtl" required />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                  <label for="usefulLinkUrl">URL *</label>
+                  <input type="text" id="usefulLinkUrl" placeholder="https://www.example.gov.lb or mailto:dept@finance.gov.lb" required />
+                  <small>Use https:// for websites or mailto: for email contacts</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label for="usefulLinkOrder">Display Order</label>
+                    <input type="number" id="usefulLinkOrder" value="0" min="0" step="1" />
+                    <small>Lower numbers appear first within the category</small>
+                  </div>
+                  <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+                      <input type="checkbox" id="usefulLinkActive" checked />
+                      Active (visible in app)
+                    </label>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn btn-primary">Save</button>
+                  <button type="button" class="btn btn-secondary" id="cancelUsefulLinkBtn">Cancel</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
