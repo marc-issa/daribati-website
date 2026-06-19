@@ -136,6 +136,11 @@
                 data-tab="usefulLinks">
                 Useful Links
               </button>
+              <button
+                class="tab-btn"
+                data-tab="taxForms">
+                Tax Forms
+              </button>
             </div>
             
             <!-- Super Admin Tabs Row (Super Admins Only) -->
@@ -1721,6 +1726,141 @@
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                   <button type="submit" class="btn btn-primary">Save</button>
                   <button type="button" class="btn btn-secondary" id="cancelUsefulLinkBtn">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax Forms Tab -->
+        <div
+          id="taxFormsTab"
+          class="tab-content">
+          <h2>Tax Forms Management</h2>
+          <p style="color: #666; margin-bottom: 20px">
+            Manage downloadable tax forms shown on the home screen. Organize by category and control visibility.
+          </p>
+
+          <div class="action-bar" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+            <button id="addTaxFormBtn" class="btn btn-primary">Add New Form</button>
+            <select id="taxFormActiveFilter" class="filter-select" style="min-width: 140px;">
+              <option value="">All Status</option>
+              <option value="true">Active Only</option>
+              <option value="false">Inactive Only</option>
+            </select>
+            <button id="applyTaxFormFiltersBtn" class="btn btn-secondary">Apply Filters</button>
+          </div>
+
+          <!-- Stats row -->
+          <div id="taxFormsStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;"></div>
+
+          <div id="taxFormsList" class="list-container"></div>
+
+          <div id="taxFormsResult" class="result-message" style="display: none"></div>
+
+          <!-- Add/Edit Tax Form Modal -->
+          <div id="taxFormModal" class="modal">
+            <div class="modal-content" style="max-width: 680px;">
+              <span class="close" id="closeTaxFormModal">&times;</span>
+              <h3 id="taxFormModalTitle">Add Tax Form</h3>
+              <form id="taxFormForm">
+                <input type="hidden" id="taxFormId" />
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div style="background: #f0f8ff; padding: 15px; border-radius: 4px; border-left: 4px solid #005544;">
+                    <h4 style="margin-bottom: 10px; color: #005544;">Category (English)</h4>
+                    <div class="form-group">
+                      <label for="taxFormCategoryEn">Category Name (English) *</label>
+                      <input type="text" id="taxFormCategoryEn" placeholder="e.g., Income Tax" required />
+                    </div>
+                  </div>
+                  <div style="background: #fff8f0; padding: 15px; border-radius: 4px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin-bottom: 10px; color: #d68910;">Category (Arabic)</h4>
+                    <div class="form-group">
+                      <label for="taxFormCategoryAr">Category Name (Arabic) *</label>
+                      <input type="text" id="taxFormCategoryAr" placeholder="مثلاً: ضريبة الدخل" dir="rtl" required />
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div style="background: #f0f8ff; padding: 15px; border-radius: 4px; border-left: 4px solid #005544;">
+                    <h4 style="margin-bottom: 10px; color: #005544;">Form Name (English)</h4>
+                    <div class="form-group">
+                      <label for="taxFormNameEn">Form Name (English) *</label>
+                      <input type="text" id="taxFormNameEn" placeholder="e.g., Annual Income Tax Return" required />
+                    </div>
+                  </div>
+                  <div style="background: #fff8f0; padding: 15px; border-radius: 4px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin-bottom: 10px; color: #d68910;">Form Name (Arabic)</h4>
+                    <div class="form-group">
+                      <label for="taxFormNameAr">Form Name (Arabic) *</label>
+                      <input type="text" id="taxFormNameAr" placeholder="مثلاً: نموذج الإقرار الضريبي السنوي" dir="rtl" required />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="taxFormUrl">Form URL *</label>
+                  <input type="text" id="taxFormUrl" placeholder="https://www.finance.gov.lb/forms/..." required />
+                  <small>Direct link to the PDF or form page</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 5px;">
+                  <div class="form-group">
+                    <label for="taxFormCategoryOrder">Category Order</label>
+                    <input type="number" id="taxFormCategoryOrder" value="0" min="0" step="1" />
+                    <small>Controls category position</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="taxFormRowOrder">Row Order</label>
+                    <input type="number" id="taxFormRowOrder" value="0" min="0" step="1" />
+                    <small>Controls form position within category</small>
+                  </div>
+                  <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+                      <input type="checkbox" id="taxFormActive" checked />
+                      Active (visible in app)
+                    </label>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn btn-primary">Save</button>
+                  <button type="button" class="btn btn-secondary" id="cancelTaxFormBtn">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Edit Category Modal -->
+          <div id="taxFormCategoryModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+              <span class="close" id="closeTaxFormCategoryModal">&times;</span>
+              <h3>Edit Category</h3>
+              <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+                Updates the category name and order for <strong>all forms</strong> in this category.
+              </p>
+              <form id="taxFormCategoryForm">
+                <input type="hidden" id="taxFormCategoryOldEn" />
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div class="form-group">
+                    <label for="taxFormCategoryNewEn">Category Name (English) *</label>
+                    <input type="text" id="taxFormCategoryNewEn" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="taxFormCategoryNewAr">Category Name (Arabic) *</label>
+                    <input type="text" id="taxFormCategoryNewAr" dir="rtl" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="taxFormCategoryNewOrder">Category Order</label>
+                  <input type="number" id="taxFormCategoryNewOrder" value="0" min="0" step="1" />
+                  <small>Lower numbers appear first</small>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn btn-primary">Save Category</button>
+                  <button type="button" class="btn btn-secondary" id="cancelTaxFormCategoryBtn">Cancel</button>
                 </div>
               </form>
             </div>

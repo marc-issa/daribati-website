@@ -180,6 +180,16 @@ function setupEventListeners() {
   document.getElementById('cancelUsefulLinkBtn').addEventListener('click', closeUsefulLinkModal);
   document.getElementById('applyUsefulLinkFiltersBtn').addEventListener('click', loadUsefulLinks);
 
+  // Tax Forms
+  document.getElementById('addTaxFormBtn').addEventListener('click', () => openTaxFormModal());
+  document.getElementById('taxFormForm').addEventListener('submit', handleSaveTaxForm);
+  document.getElementById('closeTaxFormModal').addEventListener('click', closeTaxFormModal);
+  document.getElementById('cancelTaxFormBtn').addEventListener('click', closeTaxFormModal);
+  document.getElementById('applyTaxFormFiltersBtn').addEventListener('click', loadTaxForms);
+  document.getElementById('taxFormCategoryForm').addEventListener('submit', handleSaveTaxFormCategory);
+  document.getElementById('closeTaxFormCategoryModal').addEventListener('click', closeTaxFormCategoryModal);
+  document.getElementById('cancelTaxFormCategoryBtn').addEventListener('click', closeTaxFormCategoryModal);
+
   // Add keyboard shortcuts
   setupKeyboardShortcuts();
 
@@ -247,6 +257,14 @@ function setupKeyboardShortcuts() {
       closeFeedbackModal();
       closeAlertModal();
       closeUsefulLinkModal();
+    }
+    const taxFormModal = document.getElementById('taxFormModal');
+    if (event.target === taxFormModal) {
+      closeTaxFormModal();
+    }
+    const taxFormCategoryModal = document.getElementById('taxFormCategoryModal');
+    if (event.target === taxFormCategoryModal) {
+      closeTaxFormCategoryModal();
     }
 
     // Ctrl/Cmd + K - Focus search/filter inputs
@@ -324,6 +342,9 @@ async function refreshCurrentTab() {
         break;
       case 'usefulLinks':
         await loadUsefulLinks();
+        break;
+      case 'taxForms':
+        await loadTaxForms();
         break;
       case 'adminUsers':
         await loadAdminUsers();
@@ -578,6 +599,8 @@ function switchTab(tabName) {
     loadTaxiContributions();
   } else if (tabName === 'usefulLinks') {
     loadUsefulLinks();
+  } else if (tabName === 'taxForms') {
+    loadTaxForms();
   } else if (tabName === 'cleanup') {
     loadCleanup();
   }
@@ -4461,4 +4484,250 @@ function renderCleanupResultTable(data) {
 
   html += '</tbody></table></div>';
   return html;
+}
+
+// ==========================================
+// Tax Forms Tab
+// ==========================================
+
+async function loadTaxForms() {
+  const container = document.getElementById('taxFormsList');
+  const statsContainer = document.getElementById('taxFormsStats');
+
+  try {
+    container.innerHTML = '<div class="loading">Loading tax forms...</div>';
+
+    const active = document.getElementById('taxFormActiveFilter').value;
+    let endpoint = '/api/admin/tax-forms';
+    if (active !== '') endpoint += `?active=${active}`;
+
+    const forms = await makeRequest(endpoint);
+
+    const total = forms.length;
+    const activeCount = forms.filter(f => f.active).length;
+    const categories = [...new Set(forms.map(f => f.category_en))];
+
+    statsContainer.innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Forms</div><div class="stat-value">${total}</div></div>
+      <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" style="color:#28a745">${activeCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Inactive</div><div class="stat-value" style="color:#dc3545">${total - activeCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Categories</div><div class="stat-value">${categories.length}</div></div>
+    `;
+
+    displayTaxForms(forms);
+  } catch (error) {
+    console.error('Load tax forms error:', error);
+    container.innerHTML = createEmptyState('Error loading tax forms', error.message);
+  }
+}
+
+function displayTaxForms(forms) {
+  const container = document.getElementById('taxFormsList');
+
+  if (forms.length === 0) {
+    container.innerHTML = createEmptyState('No tax forms found', 'Add your first form using the button above');
+    return;
+  }
+
+  // Group by category_en, preserving category_order
+  const grouped = {};
+  const categoryMeta = {};
+  forms.forEach(f => {
+    if (!grouped[f.category_en]) {
+      grouped[f.category_en] = [];
+      categoryMeta[f.category_en] = { order: f.category_order, ar: f.category_ar };
+    }
+    grouped[f.category_en].push(f);
+  });
+
+  const sortedCategories = Object.keys(grouped).sort(
+    (a, b) => categoryMeta[a].order - categoryMeta[b].order
+  );
+
+  let html = '';
+  sortedCategories.forEach((cat, idx) => {
+    const meta = categoryMeta[cat];
+    const color = '#005544';
+    html += `
+      <div style="margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${color};">
+          <h3 style="color: ${color}; margin: 0; flex: 1;">
+            ${escapeHtml(cat)}
+            <span style="font-size: 12px; font-weight: normal; color: #888; margin-left: 6px;">${escapeHtml(meta.ar)}</span>
+            <span style="font-size: 12px; font-weight: normal; color: #666; margin-left: 6px;">(${grouped[cat].length} forms · order ${meta.order})</span>
+          </h3>
+          <button onclick="openTaxFormCategoryModal('${escapeHtml(cat).replace(/'/g, '&#39;')}', '${escapeHtml(meta.ar).replace(/'/g, '&#39;')}', ${meta.order})"
+            class="btn btn-sm btn-secondary">
+            Edit Category
+          </button>
+        </div>
+        ${grouped[cat].map(f => createTaxFormItem(f)).join('')}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function createTaxFormItem(form) {
+  const statusBadge = form.active
+    ? '<span class="badge badge-success" style="font-size:11px;">Active</span>'
+    : '<span class="badge" style="background:#dc3545;color:white;font-size:11px;">Inactive</span>';
+
+  return `
+    <div class="list-item" style="border-left: 3px solid #005544;">
+      <div class="list-item-header">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+            <span class="list-item-title" style="font-size: 14px;">📄 ${escapeHtml(form.name_en)}</span>
+            ${statusBadge}
+            <span style="font-size: 11px; color: #888;">Row order: ${form.row_order}</span>
+          </div>
+          <div style="font-size: 13px; color: #666; margin-bottom: 4px; direction: rtl; text-align: right;">
+            ${escapeHtml(form.name_ar)}
+          </div>
+          <div style="font-size: 12px; color: #005544; word-break: break-all;">
+            ${escapeHtml(form.url)}
+          </div>
+        </div>
+        <div class="list-item-actions" style="flex-shrink: 0; margin-left: 12px;">
+          <button onclick="editTaxForm(${form.id})" class="btn btn-sm btn-primary">Edit</button>
+          <button onclick="toggleTaxForm(${form.id}, ${form.active})" class="btn btn-sm ${form.active ? 'btn-secondary' : 'btn-success'}">
+            ${form.active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button onclick="deleteTaxForm(${form.id})" class="btn btn-sm btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openTaxFormModal() {
+  document.getElementById('taxFormModalTitle').textContent = 'Add Tax Form';
+  document.getElementById('taxFormForm').reset();
+  document.getElementById('taxFormId').value = '';
+  document.getElementById('taxFormCategoryOrder').value = '0';
+  document.getElementById('taxFormRowOrder').value = '0';
+  document.getElementById('taxFormActive').checked = true;
+  document.getElementById('taxFormModal').style.display = 'block';
+}
+
+function closeTaxFormModal() {
+  document.getElementById('taxFormModal').style.display = 'none';
+  document.getElementById('taxFormForm').reset();
+}
+
+async function editTaxForm(id) {
+  try {
+    const form = await makeRequest(`/api/admin/tax-forms/${id}`);
+    document.getElementById('taxFormModalTitle').textContent = 'Edit Tax Form';
+    document.getElementById('taxFormId').value = form.id;
+    document.getElementById('taxFormCategoryEn').value = form.category_en;
+    document.getElementById('taxFormCategoryAr').value = form.category_ar;
+    document.getElementById('taxFormNameEn').value = form.name_en;
+    document.getElementById('taxFormNameAr').value = form.name_ar;
+    document.getElementById('taxFormUrl').value = form.url;
+    document.getElementById('taxFormCategoryOrder').value = form.category_order;
+    document.getElementById('taxFormRowOrder').value = form.row_order;
+    document.getElementById('taxFormActive').checked = form.active;
+    document.getElementById('taxFormModal').style.display = 'block';
+  } catch (error) {
+    showResult('taxFormsResult', error.message, 'error');
+  }
+}
+
+async function toggleTaxForm(id, currentlyActive) {
+  const action = currentlyActive ? 'deactivate' : 'activate';
+  if (!confirm(`Are you sure you want to ${action} this form?`)) return;
+  try {
+    const result = await makeRequest(`/api/admin/tax-forms/${id}/toggle`, { method: 'PUT' });
+    showResult('taxFormsResult', result.message, 'success');
+    loadTaxForms();
+  } catch (error) {
+    showResult('taxFormsResult', error.message, 'error');
+  }
+}
+
+async function deleteTaxForm(id) {
+  if (!confirm('Are you sure you want to permanently delete this form?')) return;
+  try {
+    await makeRequest(`/api/admin/tax-forms/${id}`, { method: 'DELETE' });
+    showResult('taxFormsResult', 'Form deleted successfully', 'success');
+    loadTaxForms();
+  } catch (error) {
+    showResult('taxFormsResult', error.message, 'error');
+  }
+}
+
+async function handleSaveTaxForm(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true);
+
+  const id = document.getElementById('taxFormId').value;
+  const isEdit = !!id;
+
+  const formData = {
+    category_en: document.getElementById('taxFormCategoryEn').value.trim(),
+    category_ar: document.getElementById('taxFormCategoryAr').value.trim(),
+    name_en: document.getElementById('taxFormNameEn').value.trim(),
+    name_ar: document.getElementById('taxFormNameAr').value.trim(),
+    url: document.getElementById('taxFormUrl').value.trim(),
+    category_order: parseInt(document.getElementById('taxFormCategoryOrder').value) || 0,
+    row_order: parseInt(document.getElementById('taxFormRowOrder').value) || 0,
+    active: document.getElementById('taxFormActive').checked,
+  };
+
+  try {
+    const endpoint = isEdit ? `/api/admin/tax-forms/${id}` : '/api/admin/tax-forms';
+    const method = isEdit ? 'PUT' : 'POST';
+    await makeRequest(endpoint, { method, body: JSON.stringify(formData) });
+    showResult('taxFormsResult', `Form ${isEdit ? 'updated' : 'created'} successfully`, 'success');
+    closeTaxFormModal();
+    loadTaxForms();
+  } catch (error) {
+    showResult('taxFormsResult', error.message, 'error');
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
+}
+
+function openTaxFormCategoryModal(categoryEn, categoryAr, categoryOrder) {
+  document.getElementById('taxFormCategoryOldEn').value = categoryEn;
+  document.getElementById('taxFormCategoryNewEn').value = categoryEn;
+  document.getElementById('taxFormCategoryNewAr').value = categoryAr;
+  document.getElementById('taxFormCategoryNewOrder').value = categoryOrder;
+  document.getElementById('taxFormCategoryModal').style.display = 'block';
+}
+
+function closeTaxFormCategoryModal() {
+  document.getElementById('taxFormCategoryModal').style.display = 'none';
+  document.getElementById('taxFormCategoryForm').reset();
+}
+
+async function handleSaveTaxFormCategory(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true);
+
+  const payload = {
+    old_category_en: document.getElementById('taxFormCategoryOldEn').value,
+    category_en: document.getElementById('taxFormCategoryNewEn').value.trim(),
+    category_ar: document.getElementById('taxFormCategoryNewAr').value.trim(),
+    category_order: parseInt(document.getElementById('taxFormCategoryNewOrder').value) || 0,
+  };
+
+  try {
+    const result = await makeRequest('/api/admin/tax-forms/bulk-category', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    showResult('taxFormsResult', result.message, 'success');
+    closeTaxFormCategoryModal();
+    loadTaxForms();
+  } catch (error) {
+    showResult('taxFormsResult', error.message, 'error');
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
 }
