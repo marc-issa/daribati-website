@@ -713,7 +713,16 @@ async function loadDashboard() {
     } catch (e) {
       console.error('Error rendering feedback chart:', e);
     }
-    
+
+    try {
+      const shortLinkStats = await makeCachedRequest('/api/admin/stats/short-links');
+      renderShortLinksChart(shortLinkStats);
+    } catch (e) {
+      console.error('Error rendering short links chart:', e);
+      const el = document.getElementById('shortLinksChart');
+      if (el) el.innerHTML = '<p style="text-align:center;padding:40px;color:#999;">No data available</p>';
+    }
+
     try {
       renderNotificationEngagementChart(stats.notifications);
     } catch (e) {
@@ -780,6 +789,7 @@ function showDashboardLoading() {
   document.getElementById('feedbackChart').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('notificationEngagementChart').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('calculatorUsageChart').innerHTML = '<div class="loading">Loading...</div>';
+  document.getElementById('shortLinksChart').innerHTML = '<div class="loading">Loading...</div>';
 }
 
 function hideDashboardLoading() {
@@ -790,7 +800,8 @@ function hideDashboardLoading() {
     'versionChart',
     'feedbackChart',
     'notificationEngagementChart',
-    'calculatorUsageChart'
+    'calculatorUsageChart',
+    'shortLinksChart'
   ];
   
   chartIds.forEach(chartId => {
@@ -1156,6 +1167,72 @@ function renderFeedbackChart(feedbackByCategory) {
   chartWrapper.appendChild(labelsArea);
   chartWrapper.appendChild(summaryArea);
   container.appendChild(chartWrapper);
+}
+
+// Short Links Chart
+function renderShortLinksChart(data) {
+  const container = document.getElementById('shortLinksChart');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!data || data.total === 0) {
+    container.innerHTML = `
+      <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;">
+        <div style="font-size:16px;color:#999;margin-bottom:8px;">No short links generated yet</div>
+        <div style="font-size:13px;color:#adb5bd;">Links will appear here once users open or share tax forms</div>
+      </div>`;
+    return;
+  }
+
+  const daily = data.daily || [];
+  const maxCount = daily.length > 0 ? Math.max(...daily.map(d => d.count), 1) : 1;
+  const chartHeight = 200;
+
+  const barsHTML = daily.map(item => {
+    const barH = Math.max(4, (item.count / maxCount) * chartHeight);
+    const date = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:${chartHeight}px;position:relative;" title="${item.count} links — ${date}">
+        <div style="width:100%;background:linear-gradient(180deg,#007d60 0%,#005544 100%);border-radius:4px 4px 0 0;height:${barH}px;min-height:${item.count>0?'4px':'0'};cursor:pointer;position:relative;">
+          <div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:5px 8px;border-radius:4px;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;margin-bottom:4px;transition:opacity 0.2s;" class="sl-tip">${item.count} — ${date}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="padding:20px;background:#fff;border-radius:8px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:28px;font-weight:bold;color:#005544;">${data.total}</div>
+          <div style="font-size:13px;color:#666;">All Time</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:28px;font-weight:bold;color:#005544;">${data.last_30_days}</div>
+          <div style="font-size:13px;color:#666;">Last 30 Days</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:28px;font-weight:bold;color:#005544;">${data.last_7_days}</div>
+          <div style="font-size:13px;color:#666;">Last 7 Days</div>
+        </div>
+      </div>
+      ${daily.length > 0 ? `
+        <div style="display:flex;align-items:flex-end;border-bottom:2px solid #e9ecef;border-left:2px solid #e9ecef;padding:10px 0 0 10px;gap:2px;">
+          ${barsHTML}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#999;padding-left:12px;">
+          ${daily.length > 0 ? `<span>${new Date(daily[0].date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>` : ''}
+          ${daily.length > 1 ? `<span>${new Date(daily[daily.length-1].date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>` : ''}
+        </div>
+      ` : '<p style="text-align:center;color:#999;padding:20px 0;">No daily data in the last 30 days</p>'}
+    </div>`;
+
+  // Tooltip hover
+  container.querySelectorAll('[title]').forEach(bar => {
+    const tip = bar.querySelector('.sl-tip');
+    if (!tip) return;
+    bar.addEventListener('mouseenter', () => { tip.style.opacity = '1'; });
+    bar.addEventListener('mouseleave', () => { tip.style.opacity = '0'; });
+  });
 }
 
 // Notification Engagement Chart
