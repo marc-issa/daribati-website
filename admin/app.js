@@ -721,9 +721,11 @@ async function loadDashboard() {
       console.error('Error rendering short links chart:', e);
       const el = document.getElementById('shortLinksChart');
       if (el) el.innerHTML = `
-        <div style="padding:30px;text-align:center;background:#fff3cd;border-radius:8px;border:2px solid #ffc107;">
-          <div style="font-size:15px;color:#856404;font-weight:600;margin-bottom:6px;">Could not load short link stats</div>
-          <div style="font-size:13px;color:#856404;">Make sure the backend is deployed and the migration has been run.</div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:10px;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;margin:16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style="font-size:15px;color:#92400e;font-weight:600;">Could not load short link stats</div>
+          <div style="font-size:13px;color:#a16207;text-align:center;">${e.message || 'Check that the backend is deployed and the migration has been run.'}</div>
+          <button onclick="loadDashboard()" style="margin-top:6px;padding:7px 18px;background:#005544;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">Retry</button>
         </div>`;
     }
 
@@ -793,7 +795,11 @@ function showDashboardLoading() {
   document.getElementById('feedbackChart').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('notificationEngagementChart').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('calculatorUsageChart').innerHTML = '<div class="loading">Loading...</div>';
-  document.getElementById('shortLinksChart').innerHTML = '<div class="loading">Loading...</div>';
+  document.getElementById('shortLinksChart').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;">
+      <div style="width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:#005544;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span style="color:#666;font-size:14px;">Loading short link stats…</span>
+    </div>`;
 }
 
 function hideDashboardLoading() {
