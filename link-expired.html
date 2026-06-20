@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Link Expired — Daribati</title>
+    <link rel="icon" href="logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: #f4f8f8;
+        color: #242424;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 48px 40px;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 85, 68, 0.08);
+      }
+
+      .logo {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 24px;
+      }
+
+      .icon-wrap {
+        width: 72px;
+        height: 72px;
+        background: #fff3cd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+      }
+
+      .icon-wrap svg {
+        width: 36px;
+        height: 36px;
+        color: #d68910;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #005544;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 15px;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #005544;
+        color: #fff;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 14px 28px;
+        border-radius: 12px;
+        transition: background 0.2s ease;
+      }
+
+      .btn:hover { background: #003d33; }
+
+      .footer {
+        margin-top: 32px;
+        font-size: 13px;
+        color: #adb5bd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <img src="logo.png" alt="Daribati" class="logo" />
+
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+
+      <h1>This link has expired</h1>
+      <p>
+        Tax form links are valid for 30 minutes. Please open the Daribati app and tap the form again to get a fresh link.
+      </p>
+
+      <a href="https://www.daribati.com/" class="btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Go to Daribati
+      </a>
+
+      <div class="footer">© 2024-2026 Daribati. All rights reserved.</div>
+    </div>
+  </body>
+</html>
