@@ -398,6 +398,48 @@
             Send notifications to users and manage notification history.
           </p>
 
+          <!-- Send to Specific Device -->
+          <div class="form-section">
+            <h3>Send to Specific Device</h3>
+            <form id="sendToDeviceForm">
+              <div class="form-group">
+                <label for="deviceUuidInput">Device UUID</label>
+                <input
+                  type="text"
+                  id="deviceUuidInput"
+                  placeholder="e.g. a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="deviceNotifTitle">Title</label>
+                <input
+                  type="text"
+                  id="deviceNotifTitle"
+                  placeholder="Notification title"
+                  required />
+              </div>
+              <div class="form-group">
+                <label for="deviceNotifBody">Body</label>
+                <textarea
+                  id="deviceNotifBody"
+                  rows="3"
+                  placeholder="Notification body text"
+                  required></textarea>
+              </div>
+              <div class="form-group" style="max-width: 200px;">
+                <label for="deviceNotifType">Type</label>
+                <select id="deviceNotifType">
+                  <option value="general">General</option>
+                  <option value="tax_reminder">Tax Reminder</option>
+                  <option value="service_announcement">Service Announcement</option>
+                  <option value="system_announcement">System Announcement</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Send to Device</button>
+            </form>
+            <div id="deviceNotifResult" class="result-message"></div>
+          </div>
+
           <!-- Send Notification Form -->
           <div class="form-section">
             <h3>Send Notification</h3>

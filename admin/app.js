@@ -58,6 +58,9 @@ function setupEventListeners() {
 
   // Notifications
   document
+    .getElementById('sendToDeviceForm')
+    .addEventListener('submit', handleSendToDevice);
+  document
     .getElementById('broadcastNotificationForm')
     .addEventListener('submit', handleBroadcastNotification);
   document
@@ -1603,6 +1606,38 @@ async function updateTargetUsersCount() {
     console.error('Error counting target users:', error);
     const countSpan = document.getElementById('targetUsersCount');
     if (countSpan) countSpan.textContent = '';
+  }
+}
+
+// Send notification to a specific device UUID
+async function handleSendToDevice(e) {
+  e.preventDefault();
+
+  const device_uuid = document.getElementById('deviceUuidInput').value.trim();
+  const title = document.getElementById('deviceNotifTitle').value.trim();
+  const body = document.getElementById('deviceNotifBody').value.trim();
+  const type = document.getElementById('deviceNotifType').value;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  setButtonLoading(submitBtn, true);
+
+  try {
+    const result = await makeRequest('/api/admin/notifications/send-to-device', {
+      method: 'POST',
+      body: JSON.stringify({ device_uuid, title, body, type }),
+    });
+
+    let message = 'Notification sent successfully!';
+    if (result.no_push_tokens) {
+      message = 'Notification saved but device has no push token — it will appear in-app only.';
+    }
+
+    showResult('deviceNotifResult', message, 'success');
+    e.target.reset();
+  } catch (error) {
+    showResult('deviceNotifResult', `Error: ${error.message}`, 'error');
+  } finally {
+    setButtonLoading(submitBtn, false);
   }
 }
 
