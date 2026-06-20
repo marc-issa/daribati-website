@@ -720,7 +720,11 @@ async function loadDashboard() {
     } catch (e) {
       console.error('Error rendering short links chart:', e);
       const el = document.getElementById('shortLinksChart');
-      if (el) el.innerHTML = '<p style="text-align:center;padding:40px;color:#999;">No data available</p>';
+      if (el) el.innerHTML = `
+        <div style="padding:30px;text-align:center;background:#fff3cd;border-radius:8px;border:2px solid #ffc107;">
+          <div style="font-size:15px;color:#856404;font-weight:600;margin-bottom:6px;">Could not load short link stats</div>
+          <div style="font-size:13px;color:#856404;">Make sure the backend is deployed and the migration has been run.</div>
+        </div>`;
     }
 
     try {
