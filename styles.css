@@ -437,55 +437,13 @@ img {
 /* ===== Resources ===== */
 .resources {
   padding: 80px 0;
-  background: var(--bg-alt);
+  background: var(--bg);
 }
 
 .resources-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
-}
-
-.resource-card {
-  background: var(--bg);
-  border-radius: var(--radius);
-  padding: 32px 28px;
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  border: 1px solid #e8eded;
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
-}
-
-.resource-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 85, 68, 0.08);
-  border-color: var(--accent);
-}
-
-.resource-icon {
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #e8f5f0, #d0ece5);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary);
-}
-
-.resource-body h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.resource-body p {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  line-height: 1.65;
 }
 
 @media (max-width: 640px) {
