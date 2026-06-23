@@ -627,22 +627,9 @@ async function loadDashboard() {
       stats.users.new_this_week;
     document.getElementById('statPushTokens').textContent =
       stats.users.with_push_tokens;
-    document.getElementById('statTotalNotifications').textContent =
-      stats.notifications.total;
-
     // Update new stats
     document.getElementById('statUnresolvedAlerts').textContent = stats.alerts?.unresolved || 0;
     document.getElementById('statCriticalAlerts').textContent = stats.alerts?.critical_today || 0;
-    document.getElementById('statRecentFeedback').textContent = stats.feedback?.recent_7_days || 0;
-    
-    // Handle read_rate safely
-    const readRate = stats.notifications?.read_rate;
-    if (readRate !== null && readRate !== undefined && !isNaN(readRate)) {
-      document.getElementById('statReadRate').textContent = `${Number(readRate).toFixed(1)}%`;
-    } else {
-      document.getElementById('statReadRate').textContent = '-';
-    }
-    
     document.getElementById('statActiveSessions').textContent = stats.admin?.active_sessions || 0;
 
     // Update API Health stats (super admin only)
@@ -790,11 +777,8 @@ function showDashboardLoading() {
   document.getElementById('statNewToday').textContent = '...';
   document.getElementById('statNewWeek').textContent = '...';
   document.getElementById('statPushTokens').textContent = '...';
-  document.getElementById('statTotalNotifications').textContent = '...';
     document.getElementById('statUnresolvedAlerts').textContent = '...';
     document.getElementById('statCriticalAlerts').textContent = '...';
-    document.getElementById('statRecentFeedback').textContent = '...';
-    document.getElementById('statReadRate').textContent = '...';
     document.getElementById('statActiveSessions').textContent = '...';
     document.getElementById('statTaxiContributions').textContent = '...';
 
@@ -834,8 +818,8 @@ function hideDashboardLoading() {
   // Clear loading from stat cards
   const statIds = [
     'statTotalUsers', 'statActiveUsers', 'statNewToday', 'statNewWeek',
-    'statPushTokens', 'statTotalNotifications', 'statUnresolvedAlerts',
-    'statCriticalAlerts', 'statRecentFeedback', 'statReadRate', 'statActiveSessions',
+    'statPushTokens', 'statUnresolvedAlerts',
+    'statCriticalAlerts', 'statActiveSessions',
     'statApiHealth', 'statResponseTime', 'statApiErrors',
     'statSalaryTax', 'statDeemedProfit', 'statPropertyTax', 'statRealEstateFees', 'statTaxiContributions'
   ];
@@ -1314,15 +1298,15 @@ function renderBroadcastEngagement(broadcast, label, avgReadRate) {
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #3498db;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#3498db;margin-bottom:4px;">${total_sent.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Total Sent</div>
         </div>
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #27ae60;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#27ae60;margin-bottom:4px;">${total_read.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Read <span style="color:#27ae60;">(${readPct}%)</span></div>
         </div>
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #e74c3c;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#e74c3c;margin-bottom:4px;">${total_unread.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Unread <span style="color:#e74c3c;">(${unreadPct}%)</span></div>
         </div>
@@ -1373,15 +1357,15 @@ function renderAllEngagement(allTime) {
   container.innerHTML = `
     <div style="margin-top:18px;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #3498db;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#3498db;margin-bottom:4px;">${total_sent.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Total Sent <span style="color:#aaa;">(All Time)</span></div>
         </div>
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #27ae60;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#27ae60;margin-bottom:4px;">${total_read.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Read <span style="color:#27ae60;">(${readPct}%)</span></div>
         </div>
-        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+        <div style="text-align:center;padding:18px 12px;background:#fff;border-radius:10px;border:1px solid #e9ecef;border-top:3px solid #e74c3c;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:30px;font-weight:700;color:#e74c3c;margin-bottom:4px;">${total_unread.toLocaleString()}</div>
           <div style="font-size:13px;color:#666;font-weight:500;">Unread <span style="color:#e74c3c;">(${unreadPct}%)</span></div>
         </div>
