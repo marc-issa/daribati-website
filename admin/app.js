@@ -734,15 +734,13 @@ async function loadDashboard() {
     }
 
     try {
-      // Store stats for filter usage and fetch last notification for engagement toggle
+      // Fetch per-broadcast engagement stats for the toggle (last / previous / all)
       window.lastDashboardStats = stats;
       try {
-        const lastNotifResult = await makeCachedRequest('/api/admin/notifications?limit=1');
-        window.lastNotification = (lastNotifResult.notifications && lastNotifResult.notifications.length > 0)
-          ? lastNotifResult.notifications[0] : null;
+        window.notificationEngagementData = await makeCachedRequest('/api/admin/stats/notification-engagement');
       } catch (e) {
-        console.error('Error fetching last notification:', e);
-        window.lastNotification = null;
+        console.error('Error fetching notification engagement stats:', e);
+        window.notificationEngagementData = null;
       }
       renderEngagementChart();
     } catch (e) {
@@ -1258,221 +1256,180 @@ function renderShortLinksChart(data) {
 }
 
 // Notification Engagement Chart
-function renderNotificationEngagementChart(notificationStats) {
-  const container = document.getElementById('notificationEngagementChart');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  const sent = notificationStats?.sent_last_30_days || 0;
-  
-  if (sent === 0) {
-    container.innerHTML = `
-      <div style="
-        padding: 30px;
-        text-align: center;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px dashed #dee2e6;
-      ">
-        <div style="font-size: 16px; color: #999; margin-bottom: 8px;">No notification data yet</div>
-        <div style="font-size: 13px; color: #adb5bd;">Send notifications to see engagement metrics here</div>
-      </div>
-    `;
-    return;
-  }
-
-  const read = notificationStats.read_last_30_days || 0;
-  const unread = sent - read;
-  const readRate = notificationStats.read_rate || 0;
-  const readPercentage = sent > 0 ? (read / sent * 100) : 0;
-  const unreadPercentage = sent > 0 ? (unread / sent * 100) : 0;
-
-  // Create a stacked progress bar style chart
-  const chartHTML = `
-    <div style="margin-bottom: 30px;">
-      <!-- Summary Stats -->
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-          <div style="font-size: 32px; font-weight: bold; color: #3498db; margin-bottom: 5px;">${sent}</div>
-          <div style="font-size: 14px; color: #666;">Total Sent</div>
-        </div>
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-          <div style="font-size: 32px; font-weight: bold; color: #27ae60; margin-bottom: 5px;">${read}</div>
-          <div style="font-size: 14px; color: #666;">Read (${readPercentage.toFixed(1)}%)</div>
-        </div>
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-          <div style="font-size: 32px; font-weight: bold; color: #e74c3c; margin-bottom: 5px;">${unread}</div>
-          <div style="font-size: 14px; color: #666;">Unread (${unreadPercentage.toFixed(1)}%)</div>
-        </div>
-      </div>
-
-      <!-- Stacked Bar Chart -->
-      <div style="margin-bottom: 15px;">
-        <div style="font-size: 14px; font-weight: 600; color: #666; margin-bottom: 8px;">Engagement Breakdown</div>
-        <div style="display: flex; height: 40px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          ${read > 0 ? `
-            <div style="
-              background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-              width: ${readPercentage}%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              font-weight: 600;
-              font-size: 14px;
-              transition: all 0.3s ease;
-            " title="Read: ${read} (${readPercentage.toFixed(1)}%)">
-              ${readPercentage > 15 ? `${readPercentage.toFixed(0)}%` : ''}
-            </div>
-          ` : ''}
-          ${unread > 0 ? `
-            <div style="
-              background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-              width: ${unreadPercentage}%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              font-weight: 600;
-              font-size: 14px;
-              transition: all 0.3s ease;
-            " title="Unread: ${unread} (${unreadPercentage.toFixed(1)}%)">
-              ${unreadPercentage > 15 ? `${unreadPercentage.toFixed(0)}%` : ''}
-            </div>
-          ` : ''}
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #999;">
-          <span>0%</span>
-          <span>50%</span>
-          <span>100%</span>
-        </div>
-      </div>
-
-      <!-- Performance Indicator -->
-      <div style="
-        padding: 15px;
-        background: ${readPercentage >= 50 ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 
-                     readPercentage >= 25 ? 'linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%)' : 
-                     'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)'};
-        border-left: 4px solid ${readPercentage >= 50 ? '#28a745' : readPercentage >= 25 ? '#ffc107' : '#dc3545'};
-        border-radius: 6px;
-        margin-top: 15px;
-      ">
-        <div style="font-weight: 600; margin-bottom: 5px; color: #333;">
-          ${readPercentage >= 50 ? 'Good Engagement' : readPercentage >= 25 ? 'Moderate Engagement' : 'Low Engagement'}
-        </div>
-        <div style="font-size: 13px; color: #666;">
-          ${readPercentage >= 50 ? 'More than half of your notifications are being read.' : 
-            readPercentage >= 25 ? 'About a quarter of notifications are being read. Consider improving notification relevance.' : 
-            'Very few notifications are being read. Review your notification strategy.'}
-        </div>
-      </div>
-    </div>
-  `;
-
-  container.innerHTML = chartHTML;
-}
-
-// Engagement view toggle (last notification | all notifications)
+// Engagement view toggle: 'last' | 'previous' | 'all'
 function setEngagementView(view) {
   engagementView = view;
-
   document.querySelectorAll('.engagement-view-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
-
   renderEngagementChart();
 }
 
 function renderEngagementChart() {
+  const data = window.notificationEngagementData;
+  if (!data) return;
+
   if (engagementView === 'last') {
-    if (window.lastNotification) {
-      renderLastNotificationChart(window.lastNotification);
-    } else {
-      const container = document.getElementById('notificationEngagementChart');
-      if (container) {
-        container.innerHTML = `
-          <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;margin-top:15px;">
-            <div style="font-size:16px;color:#999;margin-bottom:8px;">No notifications sent yet</div>
-            <div style="font-size:13px;color:#adb5bd;">Send your first notification to see engagement data here</div>
-          </div>`;
-      }
-    }
+    renderBroadcastEngagement(data.last, 'Last Notification', data.average_read_rate);
+  } else if (engagementView === 'previous') {
+    renderBroadcastEngagement(data.previous, 'Previous Notification', data.average_read_rate);
   } else {
-    if (window.lastDashboardStats) {
-      renderNotificationEngagementChart(window.lastDashboardStats.notifications);
-    }
+    renderAllEngagement(data.all_time);
   }
 }
 
-function renderLastNotificationChart(notif) {
+function renderBroadcastEngagement(broadcast, label, avgReadRate) {
   const container = document.getElementById('notificationEngagementChart');
   if (!container) return;
 
-  const sent = notif.recipient_count || 0;
-  const read = notif.read_count || 0;
-  const unread = notif.unread_count !== undefined ? notif.unread_count : Math.max(0, sent - read);
-  const readPercentage = sent > 0 ? (read / sent) * 100 : 0;
-  const unreadPercentage = sent > 0 ? (unread / sent) * 100 : 0;
-
-  if (sent === 0) {
+  if (!broadcast) {
     container.innerHTML = `
       <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;margin-top:15px;">
-        <div style="font-size:16px;color:#999;">No recipient data for this notification</div>
+        <div style="font-size:16px;color:#999;margin-bottom:8px;">No ${label.toLowerCase()} available</div>
+        <div style="font-size:13px;color:#adb5bd;">Send notifications to see engagement data here</div>
       </div>`;
     return;
   }
 
-  const sentDate = new Date(notif.created_at).toLocaleString();
-  const performanceColor = readPercentage >= 50 ? '#28a745' : readPercentage >= 25 ? '#ffc107' : '#dc3545';
-  const performanceBg = readPercentage >= 50
-    ? 'linear-gradient(135deg,#d4edda 0%,#c3e6cb 100%)'
-    : readPercentage >= 25
-      ? 'linear-gradient(135deg,#fff3cd 0%,#ffe69c 100%)'
-      : 'linear-gradient(135deg,#f8d7da 0%,#f5c6cb 100%)';
-  const performanceLabel = readPercentage >= 50 ? 'Good Engagement' : readPercentage >= 25 ? 'Moderate Engagement' : 'Low Engagement';
-  const performanceDesc = readPercentage >= 50
-    ? 'More than half of the recipients have read this notification.'
-    : readPercentage >= 25
-      ? 'About a quarter of recipients have read this notification.'
-      : 'Very few recipients have read this notification.';
+  const { title, sent_at, total_sent, total_read, total_unread, read_rate } = broadcast;
+  const readPct = read_rate;
+  const unreadPct = total_sent > 0 ? parseFloat(((total_unread / total_sent) * 100).toFixed(1)) : 0;
+  const sentDate = new Date(sent_at).toLocaleString();
+
+  // vs average comparison
+  const diff = parseFloat((readPct - avgReadRate).toFixed(1));
+  const vsAvgColor = diff >= 0 ? '#27ae60' : '#e74c3c';
+  const vsAvgArrow = diff >= 0 ? '↑' : '↓';
+  const vsAvgLabel = diff >= 0 ? `${diff}% above average` : `${Math.abs(diff)}% below average`;
+
+  // Engagement banner
+  const { bannerBg, bannerBorder, bannerTitle, bannerDesc } = getEngagementBanner(readPct);
 
   container.innerHTML = `
-    <div style="margin-top:15px;">
-      <div style="font-size:13px;color:#666;margin-bottom:15px;padding:10px;background:#f8f9fa;border-radius:6px;">
-        <strong>${notif.title}</strong> &mdash; sent ${sentDate}
+    <div style="margin-top:18px;">
+      <div style="font-size:13px;color:#555;margin-bottom:16px;padding:10px 14px;background:#f8f9fa;border-radius:8px;border-left:4px solid #005544;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-weight:600;color:#005544;">${escapeHtml(title)}</span>
+        <span style="color:#aaa;">•</span>
+        <span style="color:#777;">Sent ${sentDate}</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:25px;">
-        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
-          <div style="font-size:32px;font-weight:bold;color:#3498db;margin-bottom:5px;">${sent}</div>
-          <div style="font-size:14px;color:#666;">Recipients</div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#3498db;margin-bottom:4px;">${total_sent.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Total Sent</div>
         </div>
-        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
-          <div style="font-size:32px;font-weight:bold;color:#27ae60;margin-bottom:5px;">${read}</div>
-          <div style="font-size:14px;color:#666;">Read (${readPercentage.toFixed(1)}%)</div>
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#27ae60;margin-bottom:4px;">${total_read.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Read <span style="color:#27ae60;">(${readPct}%)</span></div>
         </div>
-        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
-          <div style="font-size:32px;font-weight:bold;color:#e74c3c;margin-bottom:5px;">${unread}</div>
-          <div style="font-size:14px;color:#666;">Unread (${unreadPercentage.toFixed(1)}%)</div>
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#e74c3c;margin-bottom:4px;">${total_unread.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Unread <span style="color:#e74c3c;">(${unreadPct}%)</span></div>
         </div>
       </div>
-      <div style="margin-bottom:15px;">
-        <div style="font-size:14px;font-weight:600;color:#666;margin-bottom:8px;">Engagement Breakdown</div>
-        <div style="display:flex;height:40px;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-          ${read > 0 ? `<div style="background:linear-gradient(135deg,#27ae60 0%,#229954 100%);width:${readPercentage}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px;" title="Read: ${read}">${readPercentage > 15 ? `${readPercentage.toFixed(0)}%` : ''}</div>` : ''}
-          ${unread > 0 ? `<div style="background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);width:${unreadPercentage}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px;" title="Unread: ${unread}">${unreadPercentage > 15 ? `${unreadPercentage.toFixed(0)}%` : ''}</div>` : ''}
+
+      <div style="margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">Engagement Breakdown</div>
+        <div style="display:flex;height:36px;border-radius:8px;overflow:hidden;background:#f0f0f0;box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);">
+          ${total_read > 0 ? `<div style="background:linear-gradient(90deg,#27ae60,#2ecc71);width:${readPct}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;transition:width 0.5s ease;" title="Read: ${total_read}">${readPct > 12 ? `${readPct}%` : ''}</div>` : ''}
+          ${total_unread > 0 ? `<div style="background:linear-gradient(90deg,#e74c3c,#c0392b);width:${unreadPct}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;transition:width 0.5s ease;" title="Unread: ${total_unread}">${unreadPct > 12 ? `${unreadPct}%` : ''}</div>` : ''}
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#999;">
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:#bbb;">
           <span>0%</span><span>50%</span><span>100%</span>
         </div>
       </div>
-      <div style="padding:15px;background:${performanceBg};border-left:4px solid ${performanceColor};border-radius:6px;">
-        <div style="font-weight:600;margin-bottom:5px;color:#333;">${performanceLabel}</div>
-        <div style="font-size:13px;color:#666;">${performanceDesc}</div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f8f9fa;border-radius:8px;margin-bottom:12px;font-size:13px;">
+        <span style="color:#666;">vs. avg read rate across all notifications:</span>
+        <strong style="color:#333;">${avgReadRate}%</strong>
+        <span style="color:${vsAvgColor};font-weight:600;">${vsAvgArrow} ${vsAvgLabel}</span>
+      </div>
+
+      <div style="padding:14px 16px;background:${bannerBg};border-left:4px solid ${bannerBorder};border-radius:8px;">
+        <div style="font-weight:700;color:#333;margin-bottom:3px;">${bannerTitle}</div>
+        <div style="font-size:13px;color:#555;">${bannerDesc}</div>
       </div>
     </div>`;
 }
+
+function renderAllEngagement(allTime) {
+  const container = document.getElementById('notificationEngagementChart');
+  if (!container) return;
+
+  if (!allTime || allTime.total_sent === 0) {
+    container.innerHTML = `
+      <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;margin-top:15px;">
+        <div style="font-size:16px;color:#999;margin-bottom:8px;">No notifications sent yet</div>
+        <div style="font-size:13px;color:#adb5bd;">Send notifications to see engagement data here</div>
+      </div>`;
+    return;
+  }
+
+  const { total_sent, total_read, total_unread, read_rate } = allTime;
+  const readPct = read_rate;
+  const unreadPct = total_sent > 0 ? parseFloat(((total_unread / total_sent) * 100).toFixed(1)) : 0;
+  const { bannerBg, bannerBorder, bannerTitle, bannerDesc } = getEngagementBanner(readPct);
+
+  container.innerHTML = `
+    <div style="margin-top:18px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#3498db;margin-bottom:4px;">${total_sent.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Total Sent <span style="color:#aaa;">(All Time)</span></div>
+        </div>
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#27ae60;margin-bottom:4px;">${total_read.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Read <span style="color:#27ae60;">(${readPct}%)</span></div>
+        </div>
+        <div style="text-align:center;padding:18px 12px;background:#f8f9fa;border-radius:10px;border:1px solid #e9ecef;">
+          <div style="font-size:30px;font-weight:700;color:#e74c3c;margin-bottom:4px;">${total_unread.toLocaleString()}</div>
+          <div style="font-size:13px;color:#666;font-weight:500;">Unread <span style="color:#e74c3c;">(${unreadPct}%)</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">Engagement Breakdown</div>
+        <div style="display:flex;height:36px;border-radius:8px;overflow:hidden;background:#f0f0f0;box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);">
+          ${total_read > 0 ? `<div style="background:linear-gradient(90deg,#27ae60,#2ecc71);width:${readPct}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;" title="Read: ${total_read}">${readPct > 12 ? `${readPct}%` : ''}</div>` : ''}
+          ${total_unread > 0 ? `<div style="background:linear-gradient(90deg,#e74c3c,#c0392b);width:${unreadPct}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;" title="Unread: ${total_unread}">${unreadPct > 12 ? `${unreadPct}%` : ''}</div>` : ''}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:#bbb;">
+          <span>0%</span><span>50%</span><span>100%</span>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;background:${bannerBg};border-left:4px solid ${bannerBorder};border-radius:8px;">
+        <div style="font-weight:700;color:#333;margin-bottom:3px;">${bannerTitle}</div>
+        <div style="font-size:13px;color:#555;">${bannerDesc}</div>
+      </div>
+    </div>`;
+}
+
+function getEngagementBanner(readPct) {
+  if (readPct >= 50) {
+    return {
+      bannerBg: 'linear-gradient(135deg,#d4edda,#c3e6cb)',
+      bannerBorder: '#28a745',
+      bannerTitle: 'Good Engagement',
+      bannerDesc: 'More than half of recipients are reading notifications. Keep it up!',
+    };
+  } else if (readPct >= 25) {
+    return {
+      bannerBg: 'linear-gradient(135deg,#fff3cd,#ffe69c)',
+      bannerBorder: '#ffc107',
+      bannerTitle: 'Moderate Engagement',
+      bannerDesc: 'About a quarter of recipients are reading. Consider improving notification relevance.',
+    };
+  } else {
+    return {
+      bannerBg: 'linear-gradient(135deg,#f8d7da,#f5c6cb)',
+      bannerBorder: '#dc3545',
+      bannerTitle: 'Low Engagement',
+      bannerDesc: 'Very few notifications are being read. Review your notification strategy.',
+    };
+  }
+}
+
 
 // Set calculator timeframe filter
 function setCalculatorTimeframe(timeframe) {

@@ -321,13 +321,16 @@
               class="chart-container"></div>
           </div>
 
-          <!-- 7. Engagement Metrics (merged with notification chart + view toggle) -->
-          <div class="kpi-section" style="margin-bottom: 32px;">
+          <!-- 7. Engagement Metrics -->
+          <div class="kpi-section" style="margin-top: 32px; margin-bottom: 32px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <h3 class="kpi-section-title" style="margin: 0;">Engagement Metrics</h3>
-              <div style="display: flex; gap: 10px;">
+              <div style="display: flex; gap: 8px;">
                 <button class="calculator-filter-btn engagement-view-btn active" data-view="last" onclick="setEngagementView('last')">
                   Last Notification
+                </button>
+                <button class="calculator-filter-btn engagement-view-btn" data-view="previous" onclick="setEngagementView('previous')">
+                  Previous Notification
                 </button>
                 <button class="calculator-filter-btn engagement-view-btn" data-view="all" onclick="setEngagementView('all')">
                   All Notifications
