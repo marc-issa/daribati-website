@@ -463,6 +463,19 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* Prevent the global .loading content-spinner styles from bleeding into icon buttons.
+   The global .loading class sets padding:40px and a ::before spinner meant for page sections. */
+.btn-icon.loading {
+    padding: 12px;
+    text-align: center;
+    font-size: 0;
+    color: inherit;
+}
+
+.btn-icon.loading::before {
+    content: none;
+}
+
 .btn-icon:disabled {
     opacity: 0.6;
     cursor: not-allowed;

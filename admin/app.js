@@ -5,6 +5,7 @@ let currentPage = 1;
 let currentFilters = {};
 let currentUser = null;
 let calculatorTimeframe = 30; // Default to 30 days
+let engagementView = 'last'; // 'last' | 'all'
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -733,14 +734,22 @@ async function loadDashboard() {
     }
 
     try {
-      renderNotificationEngagementChart(stats.notifications);
+      // Store stats for filter usage and fetch last notification for engagement toggle
+      window.lastDashboardStats = stats;
+      try {
+        const lastNotifResult = await makeCachedRequest('/api/admin/notifications?limit=1');
+        window.lastNotification = (lastNotifResult.notifications && lastNotifResult.notifications.length > 0)
+          ? lastNotifResult.notifications[0] : null;
+      } catch (e) {
+        console.error('Error fetching last notification:', e);
+        window.lastNotification = null;
+      }
+      renderEngagementChart();
     } catch (e) {
       console.error('Error rendering notification engagement chart:', e);
     }
-    
+
     try {
-      // Store stats for filter usage
-      window.lastDashboardStats = stats;
       renderCalculatorUsageChart(stats.calculator_usage, calculatorTimeframe);
     } catch (e) {
       console.error('Error rendering calculator usage chart:', e);
@@ -1363,6 +1372,106 @@ function renderNotificationEngagementChart(notificationStats) {
   `;
 
   container.innerHTML = chartHTML;
+}
+
+// Engagement view toggle (last notification | all notifications)
+function setEngagementView(view) {
+  engagementView = view;
+
+  document.querySelectorAll('.engagement-view-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+
+  renderEngagementChart();
+}
+
+function renderEngagementChart() {
+  if (engagementView === 'last') {
+    if (window.lastNotification) {
+      renderLastNotificationChart(window.lastNotification);
+    } else {
+      const container = document.getElementById('notificationEngagementChart');
+      if (container) {
+        container.innerHTML = `
+          <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;margin-top:15px;">
+            <div style="font-size:16px;color:#999;margin-bottom:8px;">No notifications sent yet</div>
+            <div style="font-size:13px;color:#adb5bd;">Send your first notification to see engagement data here</div>
+          </div>`;
+      }
+    }
+  } else {
+    if (window.lastDashboardStats) {
+      renderNotificationEngagementChart(window.lastDashboardStats.notifications);
+    }
+  }
+}
+
+function renderLastNotificationChart(notif) {
+  const container = document.getElementById('notificationEngagementChart');
+  if (!container) return;
+
+  const sent = notif.recipient_count || 0;
+  const read = notif.read_count || 0;
+  const unread = notif.unread_count !== undefined ? notif.unread_count : Math.max(0, sent - read);
+  const readPercentage = sent > 0 ? (read / sent) * 100 : 0;
+  const unreadPercentage = sent > 0 ? (unread / sent) * 100 : 0;
+
+  if (sent === 0) {
+    container.innerHTML = `
+      <div style="padding:30px;text-align:center;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;margin-top:15px;">
+        <div style="font-size:16px;color:#999;">No recipient data for this notification</div>
+      </div>`;
+    return;
+  }
+
+  const sentDate = new Date(notif.created_at).toLocaleString();
+  const performanceColor = readPercentage >= 50 ? '#28a745' : readPercentage >= 25 ? '#ffc107' : '#dc3545';
+  const performanceBg = readPercentage >= 50
+    ? 'linear-gradient(135deg,#d4edda 0%,#c3e6cb 100%)'
+    : readPercentage >= 25
+      ? 'linear-gradient(135deg,#fff3cd 0%,#ffe69c 100%)'
+      : 'linear-gradient(135deg,#f8d7da 0%,#f5c6cb 100%)';
+  const performanceLabel = readPercentage >= 50 ? 'Good Engagement' : readPercentage >= 25 ? 'Moderate Engagement' : 'Low Engagement';
+  const performanceDesc = readPercentage >= 50
+    ? 'More than half of the recipients have read this notification.'
+    : readPercentage >= 25
+      ? 'About a quarter of recipients have read this notification.'
+      : 'Very few recipients have read this notification.';
+
+  container.innerHTML = `
+    <div style="margin-top:15px;">
+      <div style="font-size:13px;color:#666;margin-bottom:15px;padding:10px;background:#f8f9fa;border-radius:6px;">
+        <strong>${notif.title}</strong> &mdash; sent ${sentDate}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:25px;">
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:32px;font-weight:bold;color:#3498db;margin-bottom:5px;">${sent}</div>
+          <div style="font-size:14px;color:#666;">Recipients</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:32px;font-weight:bold;color:#27ae60;margin-bottom:5px;">${read}</div>
+          <div style="font-size:14px;color:#666;">Read (${readPercentage.toFixed(1)}%)</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;">
+          <div style="font-size:32px;font-weight:bold;color:#e74c3c;margin-bottom:5px;">${unread}</div>
+          <div style="font-size:14px;color:#666;">Unread (${unreadPercentage.toFixed(1)}%)</div>
+        </div>
+      </div>
+      <div style="margin-bottom:15px;">
+        <div style="font-size:14px;font-weight:600;color:#666;margin-bottom:8px;">Engagement Breakdown</div>
+        <div style="display:flex;height:40px;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+          ${read > 0 ? `<div style="background:linear-gradient(135deg,#27ae60 0%,#229954 100%);width:${readPercentage}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px;" title="Read: ${read}">${readPercentage > 15 ? `${readPercentage.toFixed(0)}%` : ''}</div>` : ''}
+          ${unread > 0 ? `<div style="background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);width:${unreadPercentage}%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px;" title="Unread: ${unread}">${unreadPercentage > 15 ? `${unreadPercentage.toFixed(0)}%` : ''}</div>` : ''}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#999;">
+          <span>0%</span><span>50%</span><span>100%</span>
+        </div>
+      </div>
+      <div style="padding:15px;background:${performanceBg};border-left:4px solid ${performanceColor};border-radius:6px;">
+        <div style="font-weight:600;margin-bottom:5px;color:#333;">${performanceLabel}</div>
+        <div style="font-size:13px;color:#666;">${performanceDesc}</div>
+      </div>
+    </div>`;
 }
 
 // Set calculator timeframe filter
